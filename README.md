@@ -41,7 +41,16 @@ PhishLens provides a security layer that analyzes these inputs before users inte
 Clone the repository:
 
 ```bash
-git clone https://github.com/Rudra-Doke/PhishLens.git
-cd PhishLens
+git clone https://github.com/Rudra-Doke/BYTESTORMS-PhishLens.git
+cd BYTESTORMS-PhishLens
 ```
+## Team Members
 
+- Rudra Doke
+- Aayush Humne
+- Nikhil Dhormale
+
+## Team
+
+**Team Name:** BYTESTORMS  
+**Team Number:** T05

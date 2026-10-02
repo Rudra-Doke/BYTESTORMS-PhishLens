@@ -27,6 +27,108 @@ PhishLens provides a security layer that analyzes these inputs before users inte
 - Explainable risk scoring
 - SAFE / CAUTION / DANGER verdicts
 
+## Technology Stack
+
+- **Frontend:** HTML, CSS, JavaScript
+- **Backend:** Python, Flask
+- **QR Scanning:** HTML5 QR Code
+- **Security Analysis:** URL parsing, DNS, TLS, redirect and domain intelligence
+- **APIs / Services:** RDAP and optional threat-intelligence services
+- **Package Management:** pip
+- **Version Control:** Git and GitHub
+
+## Architecture / Workflow
+
+```text
+User Input
+   ↓
+URL or QR Code
+   ↓
+Decode / Parse
+   ↓
+Identify Payload Type
+   ↓
+Threat Analysis
+   ├── URL Analysis
+   ├── Domain Intelligence
+   ├── Redirect Analysis
+   ├── Lookalike / Homoglyph Detection
+   └── UPI Analysis
+   ↓
+Risk Scoring
+   ↓
+SAFE / CAUTION / DANGER
+   ↓
+Explainable Security Result
+```
+
+## Dataset / API Information
+
+PhishLens does not require a machine-learning training dataset.
+
+The system primarily uses rule-based and intelligence-driven analysis of the submitted URL or QR payload.
+
+The backend can use network-based information such as:
+
+- DNS resolution
+- HTTP/HTTPS responses
+- Redirect information
+- TLS information
+- RDAP domain registration intelligence
+- Optional threat-intelligence services
+
+No project-specific training dataset is required for the current prototype.
+
+## Screenshots / Demo Information
+
+The project demonstration showcases:
+
+- PhishLens dashboard
+- URL threat analysis
+- SAFE, CAUTION, and DANGER verdicts
+- Suspicious URL detection
+- QR-code scanning
+- QR payload classification
+- UPI Shield
+- Domain Intelligence
+- Risk score and security explanation
+
+### Demo Flow
+
+```text
+Enter URL / Scan QR
+        ↓
+Decode / Analyze
+        ↓
+Identify Security Signals
+        ↓
+Calculate Risk Score
+        ↓
+Display Verdict
+        ↓
+Explain the Detected Threats
+```
+## Limitations & Future Scope
+
+### Limitations
+
+- Some websites may block automated requests.
+- Some websites may require authentication.
+- Some destinations may be temporarily unavailable.
+- Complex client-side websites may limit automated analysis.
+- A SAFE result does not guarantee that a destination is completely safe.
+
+### Future Scope
+
+- Advanced threat-intelligence integrations
+- Improved phishing-page analysis
+- Machine-learning-based detection
+- More payment-fraud intelligence
+- Browser extension
+- Mobile application
+- Larger threat-intelligence sources
+- Advanced QR image processing
+
 ## Setup & Installation
 
 ### Requirements

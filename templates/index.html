@@ -1,0 +1,1827 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>PhishLens — Threat Intelligence</title>
+
+    <meta name="description"
+          content="PhishLens analyzes suspicious URLs, QR destinations and payment links before you interact with them.">
+
+    <!-- QR SCANNER -->
+    <script
+            src="https://unpkg.com/html5-qrcode"
+            defer>
+    </script>
+
+    <!-- PHISHLENS CSS -->
+    <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+
+<body>
+
+<!-- =========================================================
+     AMBIENT BACKGROUND
+========================================================= -->
+
+<div class="aurora aurora-one"></div>
+<div class="aurora aurora-two"></div>
+<div class="noise"></div>
+
+
+<!-- =========================================================
+     NAVIGATION
+========================================================= -->
+
+<header class="top-nav">
+
+    <div class="nav-inner">
+
+        <!-- BRAND -->
+
+        <div class="brand">
+
+            <div class="brand-icon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <div>
+
+                <div class="brand-name">
+                    PHISHLENS
+                </div>
+
+                <div class="brand-subtitle">
+                    THREAT INTELLIGENCE
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- NAV -->
+
+        <nav class="nav-links">
+
+            <button
+                    type="button"
+                    onclick="scrollToScanner()">
+
+                Analyzer
+
+            </button>
+
+
+            <button
+                    type="button"
+                    onclick="showHistory()">
+
+                History
+
+            </button>
+
+
+            <div class="protection-pill">
+
+                <span class="status-dot"></span>
+
+                Protection Active
+
+            </div>
+
+        </nav>
+
+    </div>
+
+</header>
+
+
+
+<!-- =========================================================
+     HERO
+========================================================= -->
+
+<section class="hero">
+
+    <div class="hero-content">
+
+        <div class="eyebrow">
+            DIGITAL THREAT ANALYSIS
+        </div>
+
+
+        <h1>
+
+            Security,
+
+            <span>
+                before the click.
+            </span>
+
+        </h1>
+
+
+        <p>
+
+            PhishLens analyzes links, QR destinations
+            and payment URLs for phishing signals,
+            suspicious structures, impersonation attempts
+            and dangerous redirects before you interact
+            with them.
+
+        </p>
+
+
+        <div class="hero-actions">
+
+            <button
+                    type="button"
+                    class="primary-button"
+                    onclick="scrollToScanner()">
+
+                Start Analysis
+
+                <span>→</span>
+
+            </button>
+
+
+            <button
+                    type="button"
+                    class="secondary-button"
+                    onclick="showHowItWorks()">
+
+                How it works
+
+            </button>
+
+        </div>
+
+
+        <div class="hero-trust">
+
+            <div>
+                <span class="trust-dot"></span>
+                URL intelligence
+            </div>
+
+            <div>
+                <span class="trust-dot"></span>
+                QR analysis
+            </div>
+
+            <div>
+                <span class="trust-dot"></span>
+                UPI protection
+            </div>
+
+            <div>
+                <span class="trust-dot"></span>
+                Explainable detection
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     ANALYZER
+========================================================= -->
+
+<section
+        id="scanner"
+        class="analyzer-section">
+
+    <div class="analyzer-card">
+
+
+        <!-- ANALYZER TOP BAR -->
+
+        <div class="analyzer-topbar">
+
+            <div class="window-controls">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+
+            <div class="analyzer-title">
+                PHISHLENS / ANALYZER
+            </div>
+
+
+            <div class="session-label">
+
+                SESSION
+
+                <strong id="sessionId">
+                    ----
+                </strong>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- TABS -->
+
+        <div class="scanner-tabs">
+
+            <button
+                    type="button"
+                    class="scanner-tab active"
+                    onclick="showURL()">
+
+                <span class="tab-icon">
+                    ↗
+                </span>
+
+                URL ANALYSIS
+
+            </button>
+
+
+            <button
+                    type="button"
+                    class="scanner-tab"
+                    onclick="showQR()">
+
+                <span class="tab-icon">
+                    ▦
+                </span>
+
+                QR ANALYSIS
+
+            </button>
+
+        </div>
+
+
+
+        <!-- =================================================
+             URL ANALYSIS
+        ================================================= -->
+
+        <div
+                id="urlSection"
+                class="scanner-section">
+
+            <div class="destination-heading">
+
+                <span class="section-label">
+                    DESTINATION
+                </span>
+
+                <span class="input-hint">
+                    Inspect a suspicious link
+                </span>
+
+            </div>
+
+
+            <div class="url-input-wrapper">
+
+                <span class="protocol-prefix">
+                    HTTPS://
+                </span>
+
+
+                <input
+                        id="urlInput"
+                        type="text"
+                        autocomplete="off"
+                        spellcheck="false"
+                        placeholder="example.com/login">
+
+
+                <button
+                        type="button"
+                        class="analyze-button"
+                        onclick="analyzeURL()">
+
+                    ANALYZE
+
+                    <span>
+                        →
+                    </span>
+
+                </button>
+
+            </div>
+
+
+
+            <!-- QUICK TESTS -->
+
+            <div class="quick-tests">
+
+                <span class="quick-label">
+                    QUICK TESTS
+                </span>
+
+
+                <button
+                        type="button"
+                        onclick="useExample('https://google.com')">
+
+                    Safe
+
+                </button>
+
+
+                <button
+                        type="button"
+                        onclick="useExample('http://192.168.1.1/login/verify/account')">
+
+                    Suspicious
+
+                </button>
+
+
+                <button
+                        type="button"
+                        onclick="useExample('https://paypa1-secure-login.com/verify')">
+
+                    Lookalike
+
+                </button>
+
+
+                <button
+                        type="button"
+                        onclick="useExample('https://bit.ly/3example')">
+
+                    Shortener
+
+                </button>
+
+
+                <button
+                        type="button"
+                        onclick="useExample('upi://pay?pa=unknown@upi&pn=Account+Verification&am=1&cu=INR')">
+
+                    UPI
+
+                </button>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             QR ANALYSIS
+        ================================================= -->
+
+        <div
+                id="qrSection"
+                class="scanner-section hidden">
+
+            <div class="qr-header">
+
+                <span class="section-label">
+                    QR DESTINATION
+                </span>
+
+
+                <h2>
+                    Scan before you trust.
+                </h2>
+
+
+                <p>
+
+                    Point your camera at a QR code.
+                    PhishLens decodes the destination
+                    and analyzes it before opening the link.
+
+                </p>
+
+            </div>
+
+
+            <div class="qr-scanner-frame">
+
+                <div
+                        id="qr-reader"
+                        class="qr-reader">
+                </div>
+
+
+                <div class="qr-placeholder">
+
+                    <div class="qr-symbol">
+                        ▦
+                    </div>
+
+                    <strong>
+                        CAMERA READY
+                    </strong>
+
+                    <span>
+                        Start the scanner to inspect a QR code
+                    </span>
+
+                </div>
+
+
+                <div class="scanner-corners">
+
+                    <div class="corner top-left"></div>
+                    <div class="corner top-right"></div>
+                    <div class="corner bottom-left"></div>
+                    <div class="corner bottom-right"></div>
+
+                </div>
+
+
+                <div class="scan-line"></div>
+
+            </div>
+
+
+            <div class="qr-controls">
+
+                <button
+                        type="button"
+                        class="primary-button"
+                        onclick="startQRScanner()">
+
+                    Start Camera
+
+                </button>
+
+
+                <button
+                        type="button"
+                        class="secondary-button"
+                        onclick="stopQRScanner()">
+
+                    Stop
+
+                </button>
+
+            </div>
+
+
+            <div
+                    id="cameraStatus"
+                    class="camera-status">
+
+                Camera scanner is inactive.
+
+            </div>
+
+
+            <div
+                    id="qrStatus"
+                    class="camera-status">
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             LOADING
+        ================================================= -->
+
+        <div
+                id="loading"
+                class="loading-section hidden">
+
+            <div class="loading-orbit">
+
+                <div class="orbit-ring"></div>
+                <div class="orbit-core"></div>
+
+            </div>
+
+
+            <div class="loading-title">
+                ANALYZING DESTINATION
+            </div>
+
+
+            <div class="loading-subtitle">
+
+                PhishLens is inspecting multiple
+                independent security signals.
+
+            </div>
+
+
+            <div class="analysis-steps">
+
+                <div class="analysis-step">
+
+                    <span class="step-number">
+                        01
+                    </span>
+
+                    <span>
+                        Inspecting URL structure
+                    </span>
+
+                    <span class="step-status">
+                        SCAN
+                    </span>
+
+                </div>
+
+
+                <div class="analysis-step">
+
+                    <span class="step-number">
+                        02
+                    </span>
+
+                    <span>
+                        Checking domain intelligence
+                    </span>
+
+                    <span class="step-status">
+                        SCAN
+                    </span>
+
+                </div>
+
+
+                <div class="analysis-step">
+
+                    <span class="step-number">
+                        03
+                    </span>
+
+                    <span>
+                        Following destination signals
+                    </span>
+
+                    <span class="step-status">
+                        SCAN
+                    </span>
+
+                </div>
+
+
+                <div class="analysis-step">
+
+                    <span class="step-number">
+                        04
+                    </span>
+
+                    <span>
+                        Evaluating threat indicators
+                    </span>
+
+                    <span class="step-status">
+                        SCAN
+                    </span>
+
+                </div>
+
+
+                <div class="analysis-step">
+
+                    <span class="step-number">
+                        05
+                    </span>
+
+                    <span>
+                        Building explainable verdict
+                    </span>
+
+                    <span class="step-status">
+                        SCAN
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             RESULT
+        ================================================= -->
+
+        <div
+                id="result"
+                class="result-section hidden">
+
+
+            <!-- RESULT HEADER -->
+
+            <div class="result-header">
+
+                <div class="result-main">
+
+                    <div
+                            id="verdictBadge"
+                            class="verdict-badge">
+
+                        UNKNOWN
+
+                    </div>
+
+
+                    <h2 id="resultTitle">
+                        Destination analyzed
+                    </h2>
+
+
+                    <div class="result-destination">
+
+                        <span>
+                            DESTINATION
+                        </span>
+
+                        <strong id="resultDomain">
+                            —
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <!-- RISK SCORE -->
+
+                <div class="score-block">
+
+                    <span>
+                        RISK SCORE
+                    </span>
+
+
+                    <div class="score-number">
+
+                        <strong id="riskScore">
+                            0
+                        </strong>
+
+                        <small>
+                            /100
+                        </small>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- RISK BAR -->
+
+            <div class="risk-track">
+
+                <div
+                        id="riskBar"
+                        class="risk-bar">
+                </div>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 THREAT BREAKDOWN
+            ================================================= -->
+
+            <div class="result-grid">
+
+
+                <div class="threat-breakdown">
+
+                    <div class="result-section-title">
+                        THREAT BREAKDOWN
+                    </div>
+
+
+                    <!-- URL -->
+
+                    <div class="signal-row">
+
+                        <div class="signal-heading">
+
+                            <span>
+                                URL STRUCTURE
+                            </span>
+
+                            <small>
+                                Pattern analysis
+                            </small>
+
+                        </div>
+
+
+                        <div class="signal-track">
+
+                            <div
+                                    id="urlSignal"
+                                    class="signal-fill">
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- DOMAIN -->
+
+                    <div class="signal-row">
+
+                        <div class="signal-heading">
+
+                            <span>
+                                DOMAIN SIGNAL
+                            </span>
+
+                            <small>
+                                Identity analysis
+                            </small>
+
+                        </div>
+
+
+                        <div class="signal-track">
+
+                            <div
+                                    id="domainSignal"
+                                    class="signal-fill">
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- SECURITY -->
+
+                    <div class="signal-row">
+
+                        <div class="signal-heading">
+
+                            <span>
+                                SECURITY
+                            </span>
+
+                            <small>
+                                Transport analysis
+                            </small>
+
+                        </div>
+
+
+                        <div class="signal-track">
+
+                            <div
+                                    id="securitySignal"
+                                    class="signal-fill">
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- WHY RESULT -->
+
+                <div class="why-result">
+
+                    <div class="result-section-title">
+                        WHY THIS RESULT?
+                    </div>
+
+
+                    <div
+                            id="reasonsList"
+                            class="reasons-list">
+                    </div>
+
+
+                    <div
+                            id="reasons"
+                            class="reasons-list">
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 DOMAIN DNA
+            ================================================= -->
+
+            <div
+                    id="domainIntelligence"
+                    class="domain-intelligence">
+
+                <div class="domain-intelligence-header">
+
+                    <div>
+
+                        <span class="section-label">
+                            DOMAIN INTELLIGENCE
+                        </span>
+
+                        <h3>
+                            Domain DNA
+                        </h3>
+
+                    </div>
+
+
+                    <span
+                            id="intelStatus"
+                            class="intel-status">
+
+                        ANALYZED
+
+                    </span>
+
+                </div>
+
+
+                <div class="domain-intelligence-grid">
+
+                    <div class="intel-item">
+
+                        <span>
+                            DOMAIN
+                        </span>
+
+                        <strong id="intelDomain">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="intel-item">
+
+                        <span>
+                            TYPE
+                        </span>
+
+                        <strong id="intelType">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="intel-item">
+
+                        <span>
+                            SUBDOMAINS
+                        </span>
+
+                        <strong id="intelSubdomains">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="intel-item">
+
+                        <span>
+                            TRUST
+                        </span>
+
+                        <strong id="intelTrusted">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="intel-item">
+
+                        <span>
+                            LOOKALIKE
+                        </span>
+
+                        <strong id="intelLookalike">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="intel-item">
+
+                        <span>
+                            FINAL DOMAIN
+                        </span>
+
+                        <strong id="intelFinalDomain">
+                            —
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 UPI SHIELD
+            ================================================= -->
+
+            <div
+                    id="upiShield"
+                    class="upi-shield">
+
+                <div class="upi-shield-header">
+
+                    <div>
+
+                        <span class="section-label">
+                            PAYMENT INTELLIGENCE
+                        </span>
+
+                        <h3>
+                            UPI Shield
+                        </h3>
+
+                    </div>
+
+
+                    <span
+                            id="upiStatus"
+                            class="upi-status">
+
+                        NO UPI SIGNAL
+
+                    </span>
+
+                </div>
+
+
+                <div class="upi-shield-body">
+
+                    <div class="upi-payment-item">
+
+                        <span>
+                            PAYEE
+                        </span>
+
+                        <strong id="upiPayee">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="upi-payment-item">
+
+                        <span>
+                            AMOUNT
+                        </span>
+
+                        <strong id="upiAmount">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="upi-payment-item">
+
+                        <span>
+                            CURRENCY
+                        </span>
+
+                        <strong id="upiCurrency">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="upi-payment-item">
+
+                        <span>
+                            PAYMENT RISK
+                        </span>
+
+                        <strong id="upiRisk">
+                            —
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <p id="upiMessage">
+
+                    No UPI-specific payment signal detected.
+
+                </p>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 REDIRECT INTELLIGENCE
+            ================================================= -->
+
+            <div
+                    id="redirectCard"
+                    class="redirect-card hidden">
+
+                <div class="redirect-header">
+
+                    <div>
+
+                        <span class="section-label">
+                            DESTINATION PATH
+                        </span>
+
+                        <h3>
+                            Redirect Intelligence
+                        </h3>
+
+                    </div>
+
+
+                    <span
+                            id="redirectCount"
+                            class="redirect-badge">
+
+                        0 HOPS
+
+                    </span>
+
+                </div>
+
+
+                <div
+                        id="redirectChain"
+                        class="redirect-chain">
+                </div>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 EXPLANATION
+            ================================================= -->
+
+            <div
+                    id="explanation"
+                    class="explanation-card">
+
+                <div class="explanation-icon">
+                    i
+                </div>
+
+
+                <div>
+
+                    <strong>
+                        Explain the threat
+                    </strong>
+
+
+                    <p id="explanationText">
+
+                        PhishLens has not analyzed
+                        a destination yet.
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 ENGINE CONFIDENCE
+            ================================================= -->
+
+            <div class="confidence-card">
+
+                <div class="confidence-heading">
+
+                    <div>
+
+                        <span class="section-label">
+                            ENGINE CONFIDENCE
+                        </span>
+
+                        <h3>
+                            Detection confidence
+                        </h3>
+
+                    </div>
+
+
+                    <strong id="confidenceValue">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="confidence-track">
+
+                    <div
+                            id="confidenceBar"
+                            class="confidence-fill">
+                    </div>
+
+                </div>
+
+
+                <p id="confidenceText">
+
+                    Confidence will be calculated
+                    from independent security signals.
+
+                </p>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 DETECTED SIGNALS
+            ================================================= -->
+
+            <div class="attack-signals">
+
+                <div class="result-section-title">
+                    DETECTED SIGNALS
+                </div>
+
+
+                <div
+                        id="attackBadges"
+                        class="attack-badges">
+
+                    <span class="attack-badge">
+                        URL ANALYSIS
+                    </span>
+
+                    <span class="attack-badge">
+                        DOMAIN ANALYSIS
+                    </span>
+
+                    <span class="attack-badge">
+                        REDIRECT ANALYSIS
+                    </span>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 PRIVACY
+            ================================================= -->
+
+            <div class="privacy-note">
+
+                <span class="privacy-icon">
+                    ◇
+                </span>
+
+
+                <div>
+
+                    <strong>
+                        Privacy by design
+                    </strong>
+
+                    <p>
+
+                        Query parameters are represented
+                        using a SHA-256 hash for logging.
+                        PhishLens does not need to store
+                        raw query values.
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- ACTIONS -->
+
+            <div class="result-actions">
+
+                <button
+                        type="button"
+                        class="secondary-button"
+                        onclick="copyResult()">
+
+                    Copy Report
+
+                </button>
+
+
+                <button
+                        type="button"
+                        class="secondary-button"
+                        onclick="resetScanner()">
+
+                    Analyze Another
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     HISTORY
+========================================================= -->
+
+<section
+        id="historySection"
+        class="history-section">
+
+    <div class="section-eyebrow">
+        SCAN HISTORY
+    </div>
+
+
+    <div class="history-heading-row">
+
+        <div>
+
+            <h2>
+                Your recent
+                <span>security checks.</span>
+            </h2>
+
+            <p class="section-description">
+
+                Every scan stays on this device so you can
+                review previously analyzed destinations.
+
+            </p>
+
+        </div>
+
+
+        <div class="history-summary">
+
+            <div class="history-summary-card">
+
+                <strong id="historyTotal">
+                    0
+                </strong>
+
+                <span>
+                    TOTAL SCANS
+                </span>
+
+            </div>
+
+
+            <div class="history-summary-card">
+
+                <strong id="historyThreats">
+                    0
+                </strong>
+
+                <span>
+                    THREATS
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- HISTORY CONTROLS -->
+
+    <div class="history-controls">
+
+        <button
+                type="button"
+                class="secondary-button"
+                onclick="scrollToScanner()">
+
+            + New Analysis
+
+        </button>
+
+
+        <button
+                type="button"
+                class="secondary-button"
+                onclick="clearHistory()">
+
+            Clear History
+
+        </button>
+
+    </div>
+
+
+    <!-- HISTORY LIST -->
+
+    <div
+            id="historyList"
+            class="history-list">
+
+        <div class="history-empty">
+
+            <div class="history-empty-icon">
+                ◌
+            </div>
+
+
+            <strong>
+                No scans yet
+            </strong>
+
+
+            <span>
+                Your analyzed destinations will appear here.
+            </span>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     HOW PHISHLENS THINKS
+========================================================= -->
+
+<section
+        id="howItWorks"
+        class="how-section">
+
+    <div class="section-eyebrow">
+        HOW PHISHLENS THINKS
+    </div>
+
+
+    <h2>
+
+        From destination
+        <span>
+            to decision.
+        </span>
+
+    </h2>
+
+
+    <p class="section-description">
+
+        PhishLens breaks a destination into multiple
+        independent security signals instead of relying
+        on one simple blacklist check.
+
+    </p>
+
+
+    <div class="feature-grid">
+
+
+        <!-- 01 -->
+
+        <div class="feature-card">
+
+            <div class="feature-number">
+                01 / INSPECT
+            </div>
+
+
+            <div class="feature-icon">
+                ↗
+            </div>
+
+
+            <h3>
+                Inspect
+            </h3>
+
+
+            <p>
+
+                Examine protocol, URL structure,
+                parameters, subdomains and suspicious
+                patterns.
+
+            </p>
+
+        </div>
+
+
+
+        <!-- 02 -->
+
+        <div class="feature-card">
+
+            <div class="feature-number">
+                02 / ANALYZE
+            </div>
+
+
+            <div class="feature-icon">
+                ◇
+            </div>
+
+
+            <h3>
+                Analyze
+            </h3>
+
+
+            <p>
+
+                Combine independent signals into
+                a transparent risk score.
+
+            </p>
+
+        </div>
+
+
+
+        <!-- 03 -->
+
+        <div class="feature-card">
+
+            <div class="feature-number">
+                03 / EXPLAIN
+            </div>
+
+
+            <div class="feature-icon">
+                ⓘ
+            </div>
+
+
+            <h3>
+                Explain
+            </h3>
+
+
+            <p>
+
+                Convert technical indicators into
+                a clear human-readable explanation.
+
+            </p>
+
+        </div>
+
+
+
+        <!-- 04 -->
+
+        <div class="feature-card">
+
+            <div class="feature-number">
+                04 / PROTECT
+            </div>
+
+
+            <div class="feature-icon">
+                ◉
+            </div>
+
+
+            <h3>
+                Protect
+            </h3>
+
+
+            <p>
+
+                Help users recognize risky destinations
+                before sharing credentials or payment
+                information.
+
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     ENGINE CAPABILITIES
+========================================================= -->
+
+<section class="signals-section">
+
+    <div class="section-eyebrow">
+        MULTI-SIGNAL ENGINE
+    </div>
+
+
+    <h2>
+
+        More than a
+        <span>blacklist.</span>
+
+    </h2>
+
+
+    <p class="section-description">
+
+        PhishLens evaluates different characteristics
+        of a destination and combines them into an
+        explainable security decision.
+
+    </p>
+
+
+    <div class="signal-feature-grid">
+
+
+        <div class="signal-feature-card">
+
+            <span class="signal-feature-number">
+                01
+            </span>
+
+            <h3>
+                URL Structure
+            </h3>
+
+            <p>
+                Detect insecure protocols, IP-based
+                destinations, suspicious paths,
+                encoded characters and phishing language.
+            </p>
+
+        </div>
+
+
+        <div class="signal-feature-card">
+
+            <span class="signal-feature-number">
+                02
+            </span>
+
+            <h3>
+                Domain DNA
+            </h3>
+
+            <p>
+                Inspect domain identity, trust status,
+                subdomains and lookalike patterns.
+            </p>
+
+        </div>
+
+
+        <div class="signal-feature-card">
+
+            <span class="signal-feature-number">
+                03
+            </span>
+
+            <h3>
+                Redirect Intelligence
+            </h3>
+
+            <p>
+                Follow server-side redirects and expose
+                the final destination before the user clicks.
+            </p>
+
+        </div>
+
+
+        <div class="signal-feature-card">
+
+            <span class="signal-feature-number">
+                04
+            </span>
+
+            <h3>
+                UPI Shield
+            </h3>
+
+            <p>
+                Inspect UPI payment information for
+                suspicious verification and account language.
+            </p>
+
+        </div>
+
+
+        <div class="signal-feature-card">
+
+            <span class="signal-feature-number">
+                05
+            </span>
+
+            <h3>
+                QR Intelligence
+            </h3>
+
+            <p>
+                Decode QR destinations and pass the
+                resulting URL through the same security engine.
+            </p>
+
+        </div>
+
+
+        <div class="signal-feature-card">
+
+            <span class="signal-feature-number">
+                06
+            </span>
+
+            <h3>
+                Explainable AI
+            </h3>
+
+            <p>
+                Turn technical indicators into a simple
+                explanation that users can understand.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     LIVE SESSION STATS
+========================================================= -->
+
+<section class="stats-section">
+
+
+    <div class="stat-card">
+
+        <span
+                id="analysisCount"
+                class="stat-value">
+
+            0
+
+        </span>
+
+
+        <span class="stat-label">
+
+            ANALYSES THIS SESSION
+
+        </span>
+
+    </div>
+
+
+
+    <div class="stat-card">
+
+        <span
+                id="threatCount"
+                class="stat-value">
+
+            0
+
+        </span>
+
+
+        <span class="stat-label">
+
+            THREATS DETECTED
+
+        </span>
+
+    </div>
+
+
+
+    <div class="stat-card">
+
+        <span class="stat-value">
+
+            REAL-TIME
+
+        </span>
+
+
+        <span class="stat-label">
+
+            MULTI-SIGNAL ENGINE
+
+        </span>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     FOOTER
+========================================================= -->
+
+<footer class="footer">
+
+    <div>
+
+        <strong>
+            PHISHLENS
+        </strong>
+
+        <span>
+            Threat Intelligence
+        </span>
+
+    </div>
+
+
+    <div>
+
+        Security before the click.
+
+    </div>
+
+</footer>
+
+
+
+<!-- =========================================================
+     TOAST
+========================================================= -->
+
+<div
+        id="toast"
+        class="toast hidden">
+</div>
+
+
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+
+<script
+        src="{{ url_for('static', filename='script.js') }}">
+</script>
+
+
+</body>
+
+</html>

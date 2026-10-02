@@ -1,56 +1,47 @@
 # PhishLens
 
-### QR & URL Threat Intelligence Scanner
+## Project Overview
 
-PhishLens is a cybersecurity prototype that analyzes URLs and QR-code payloads to identify potentially malicious, deceptive, or suspicious destinations before a user interacts with them.
+PhishLens is a cybersecurity prototype developed by Team BYTESTORMS (T05) for TechForge 2026.
 
-It combines URL intelligence, domain analysis, redirect inspection, lookalike-domain detection, UPI analysis, and QR classification into a single security-focused interface.
-
----
+It analyzes URLs and QR-code payloads to detect potentially malicious, deceptive, or suspicious destinations. The system provides a SAFE, CAUTION, or DANGER verdict with an explainable risk score.
 
 ## Problem Statement
 
-QR codes and links are increasingly used for payments, authentication, KYC verification, login pages, promotions, and everyday communication.
+QR codes and links are widely used for payments, authentication, KYC verification, login pages, and communication. Attackers can exploit them using phishing links, deceptive domains, malicious redirects, and fraudulent payment requests.
 
-Attackers can abuse these channels by creating:
+PhishLens provides a security layer that analyzes these inputs before users interact with them.
 
-- Phishing URLs
-- Lookalike domains
-- Homoglyph domains
-- Fake KYC/login pages
-- Suspicious redirects
-- Malicious payment links
-- Fraudulent UPI requests
-- QR codes containing deceptive payloads
+## Key Features
 
-Users often cannot determine whether a link or QR code is trustworthy before opening it.
+- URL threat analysis
+- Universal QR-code scanning
+- QR payload classification
+- UPI payment analysis
+- Lookalike-domain detection
+- Homoglyph detection
+- Suspicious URL detection
+- Redirect intelligence
+- Domain intelligence
+- DNS and TLS analysis
+- Explainable risk scoring
+- SAFE / CAUTION / DANGER verdicts
 
-PhishLens aims to provide a simple security layer that analyzes the destination and explains the detected risk in plain language.
+## Setup & Installation
 
----
+### Requirements
 
-## Proposed Solution
+- Python 3
+- pip
+- Modern web browser
+- Camera access for QR scanning
 
-PhishLens accepts either:
+### Installation
 
-1. A URL entered manually
-2. A QR code scanned through the camera
+Clone the repository:
 
-The system then:
+```bash
+git clone https://github.com/Rudra-Doke/PhishLens.git
+cd PhishLens
+```
 
-```text
-URL / QR Code
-      ↓
-Decode / Parse
-      ↓
-Identify Payload Type
-      ↓
-Analyze URL / Domain / Payment Data
-      ↓
-Collect Security Signals
-      ↓
-Calculate Risk
-      ↓
-SAFE / CAUTION / DANGER
-      ↓
-Explain the Result

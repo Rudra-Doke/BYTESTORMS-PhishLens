@@ -2274,11 +2274,8 @@ function fallbackCopy(text) {
 
 
 // ============================================================
-// UNIVERSAL QR SCANNER
+// QR SCANNER
 // ============================================================
-
-let qrScanLocked = false;
-
 
 async function startQRScanner() {
 
@@ -2288,21 +2285,19 @@ async function startQRScanner() {
     ) {
 
         showToast(
-            "QR scanner library is not available."
+            "QR scanner library is unavailable."
         );
 
         return;
     }
 
-
     const reader =
         document.getElementById(
-            "qr-reader"
+            "qrReader"
         ) ||
         document.getElementById(
-            "qrReader"
+            "qr-reader"
         );
-
 
     if (!reader) {
 
@@ -2313,476 +2308,91 @@ async function startQRScanner() {
         return;
     }
 
-
     try {
 
         if (qrScanner) {
-
             await stopQRScanner();
-
         }
 
-
-        qrScanLocked = false;
-
-
-        const cameras =
-            await Html5Qrcode.getCameras();
-
-
-        if (
-            !cameras ||
-            cameras.length === 0
-        ) {
-
-            throw new Error(
-                "No camera was detected."
-            );
-
-        }
-
-
-        console.log(
-            "PhishLens cameras:",
-            cameras
-        );
-
-
-        let selectedCamera =
-            cameras.find(
-                camera =>
-                    /back|rear|environment/i.test(
-                        camera.label || ""
-                    )
-            );
-
-
-        if (!selectedCamera) {
-
-            selectedCamera =
-                cameras[0];
-
-        }
-
-
-        console.log(
-            "Using camera:",
-            selectedCamera
-        );
-
+        const readerId =
+            reader.id;
 
         qrScanner =
             new Html5Qrcode(
-                reader.id
+                readerId
             );
-
-
-        const qrConfig = {
-
-            /*
-             * Higher scan frequency helps when
-             * the QR is moving slightly.
-             */
-            fps: 30,
-
-
-            /*
-             * Larger scanning area.
-             *
-             * Important for dense payment QRs.
-             */
-            qrbox: function (
-                viewfinderWidth,
-                viewfinderHeight
-            ) {
-
-                const smallest =
-                    Math.min(
-                        viewfinderWidth,
-                        viewfinderHeight
-                    );
-
-
-                const size =
-                    Math.max(
-                        280,
-                        Math.min(
-                            500,
-                            Math.floor(
-                                smallest * 0.88
-                            )
-                        )
-                    );
-
-
-                return {
-                    width: size,
-                    height: size
-                };
-
-            },
-
-
-            /*
-             * Allow mirrored/rotated camera
-             * handling.
-             */
-            disableFlip: false,
-
-
-            /*
-             * Only ask the decoder to look
-             * for QR codes.
-             */
-            formatsToSupport: [
-                Html5QrcodeSupportedFormats.QR_CODE
-            ]
-
-        };
-
-
-        /*
-         * Do NOT use the experimental native
-         * BarcodeDetector here.
-         *
-         * We want html5-qrcode's normal
-         * QR decoder because it is more
-         * tolerant of dense payment QRs.
-         */
-
 
         await qrScanner.start(
 
-            selectedCamera.id,
+            {
+                facingMode:
+                    "environment"
+            },
 
-            qrConfig,
+            {
+                fps: 10,
 
-
-            async (
-                decodedText
-            ) => {
-
-                if (
-                    qrScanLocked
-                ) {
-
-                    return;
-
+                qrbox: {
+                    width: 250,
+                    height: 250
                 }
+            },
 
-
-                if (
-                    !decodedText ||
-                    !decodedText.trim()
-                ) {
-
-                    return;
-
-                }
-
-
-                qrScanLocked = true;
-
-
-                const payload =
-                    decodedText.trim();
-
-
-                console.log(
-                    "QR DECODED:",
-                    payload
-                );
-
-
-                updateCameraStatus(
-                    "QR detected — analyzing securely..."
-                );
-
-
-                await stopQRScanner();
-
+            decodedText => {
 
                 const input =
                     document.getElementById(
                         "urlInput"
                     );
 
-
                 if (input) {
-
                     input.value =
-                        payload;
-
+                        decodedText;
                 }
 
+                stopQRScanner();
 
-                await analyzeDecodedQR(
-                    payload
-                );
+                showURL();
 
+                analyzeURL();
             },
 
-
             () => {
-
-                /*
-                 * Normal unsuccessful frames.
-                 * Keep scanning silently.
-                 */
-
+                // Normal QR frame failure.
             }
-
         );
-
-
-        /*
-         * Try continuous autofocus when the
-         * browser/camera supports it.
-         */
-        try {
-
-            await qrScanner.applyVideoConstraints({
-
-                advanced: [
-                    {
-                        focusMode:
-                            "continuous"
-                    }
-                ]
-
-            });
-
-        } catch (focusError) {
-
-            console.log(
-                "Continuous autofocus not supported:",
-                focusError
-            );
-
-        }
-
 
         updateCameraStatus(
-            "Camera active — move the QR closer and keep it fully inside the frame."
+            "Camera active — position the QR code inside the frame."
         );
-
 
         showToast(
-            "Universal QR scanner ready."
+            "Camera ready."
         );
-
 
     } catch (error) {
 
         console.error(
-            "PhishLens QR scanner error:",
+            "QR scanner error:",
             error
         );
-
-
-        qrScanner = null;
-
-        qrScanLocked = false;
-
-
-        const message =
-            error &&
-            error.message
-                ? error.message
-                : "Unable to start QR scanner.";
-
 
         updateCameraStatus(
-            message
+            "Camera could not be started. Check browser permissions."
         );
-
 
         showToast(
-            message
+            "Camera could not be started."
         );
-
     }
-
 }
 
-// ============================================================
-// ANALYZE DECODED QR
-// ============================================================
-
-async function analyzeDecodedQR(
-    payload
-) {
-
-    if (
-        !payload ||
-        !payload.trim()
-    ) {
-
-        showToast(
-            "The QR code did not contain readable data."
-        );
-
-        return;
-    }
-
-
-    clearOldResult();
-
-    showLoading();
-
-
-    try {
-
-        const response =
-            await fetch(
-                "/analyze-qr",
-                {
-
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body: JSON.stringify({
-
-                        payload:
-                            payload.trim()
-
-                    })
-
-                }
-            );
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                "QR analysis server returned " +
-                response.status
-            );
-
-        }
-
-
-        const data =
-            await response.json();
-
-
-        if (data.error) {
-
-            throw new Error(
-                data.error
-            );
-
-        }
-
-
-        scanCount++;
-
-
-        const verdict =
-            String(
-                data.verdict ||
-                "UNKNOWN"
-            ).toUpperCase();
-
-
-        if (
-            verdict === "DANGER" ||
-            verdict === "CAUTION"
-        ) {
-
-            threatCount++;
-
-        }
-
-
-        saveToHistory(
-            data,
-            payload.trim()
-        );
-
-
-        hideLoading();
-
-
-        /*
-         * Display the complete security result.
-         */
-        showResult(
-            data
-        );
-
-
-        updateStats();
-
-
-        /*
-         * Tell the user what type of QR
-         * was actually decoded.
-         */
-        if (
-            data.qr &&
-            data.qr.type
-        ) {
-
-            const qrType =
-                data.qr.type;
-
-
-            showToast(
-                "QR decoded: " +
-                qrType
-            );
-
-        } else {
-
-            showToast(
-                "QR decoded and analyzed."
-            );
-
-        }
-
-
-    } catch (error) {
-
-        console.error(
-            "QR analysis error:",
-            error
-        );
-
-
-        hideLoading();
-
-
-        showToast(
-            error.message ||
-            "Unable to analyze the QR code."
-        );
-
-    } finally {
-
-        qrScanLocked = false;
-
-    }
-
-}
-
-
-// ============================================================
-// STOP QR SCANNER
-// ============================================================
 
 async function stopQRScanner() {
 
     if (!qrScanner) {
-
         return;
-
     }
-
 
     try {
 
@@ -2791,74 +2401,51 @@ async function stopQRScanner() {
         ) {
 
             await qrScanner.stop();
-
         }
 
-
         await qrScanner.clear();
-
 
     } catch (error) {
 
         console.warn(
-            "QR scanner cleanup:",
+            "QR cleanup:",
             error
         );
-
     }
 
-
     qrScanner = null;
-
 
     updateCameraStatus(
         "Camera scanner is inactive."
     );
-
 }
 
 
-// ============================================================
-// CAMERA STATUS
-// ============================================================
-
-function updateCameraStatus(
-    message
-) {
+function updateCameraStatus(message) {
 
     const cameraStatus =
         document.getElementById(
             "cameraStatus"
         );
 
-
     const qrStatus =
         document.getElementById(
             "qrStatus"
         );
 
-
     if (cameraStatus) {
 
         cameraStatus.textContent =
             message;
-
     }
-
 
     if (qrStatus) {
 
         qrStatus.textContent =
             message;
-
     }
-
 }
 
-
-// ============================================================
-// END QR SCANNER
-// ============================================================
 
 // ============================================================
 // RESET

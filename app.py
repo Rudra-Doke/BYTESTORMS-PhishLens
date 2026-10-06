@@ -16,6 +16,12 @@ import os
 import time
 import requests
 
+from history_service import (
+    get_scan_history,
+    get_scan_by_id,
+    get_scan_statistics,
+)
+
 from persistence import persist_scan
 
 
@@ -3878,6 +3884,113 @@ def healthz():
             PHISHTANK_APP_KEY
         )
     }), 200
+
+# ============================================================
+# SERVER-SIDE HISTORY API
+# ============================================================
+
+@app.route(
+    "/api/history",
+    methods=["GET"]
+)
+def api_history():
+
+    try:
+        raw_limit = request.args.get(
+            "limit",
+            "50"
+        )
+
+        try:
+            limit = int(raw_limit)
+        except (TypeError, ValueError):
+            limit = 50
+
+        limit = max(
+            1,
+            min(limit, 100)
+        )
+
+        return jsonify({
+            "status": "OK",
+            "count": len(
+                get_scan_history(limit)
+            ),
+            "scans": get_scan_history(limit)
+        }), 200
+
+    except Exception:
+
+        app.logger.exception(
+            "History API error"
+        )
+
+        return jsonify({
+            "error":
+                "History could not be loaded."
+        }), 500
+
+
+@app.route(
+    "/api/history/<scan_id>",
+    methods=["GET"]
+)
+def api_history_scan(scan_id):
+
+    try:
+        scan = get_scan_by_id(
+            scan_id
+        )
+
+        if scan is None:
+
+            return jsonify({
+                "error":
+                    "Scan not found."
+            }), 404
+
+        return jsonify({
+            "status": "OK",
+            "scan": scan
+        }), 200
+
+    except Exception:
+
+        app.logger.exception(
+            "Single scan history API error"
+        )
+
+        return jsonify({
+            "error":
+                "Scan could not be loaded."
+        }), 500
+
+
+@app.route(
+    "/api/stats",
+    methods=["GET"]
+)
+def api_stats():
+
+    try:
+
+        return jsonify({
+            "status": "OK",
+            "stats":
+                get_scan_statistics()
+        }), 200
+
+    except Exception:
+
+        app.logger.exception(
+            "Statistics API error"
+        )
+
+        return jsonify({
+            "error":
+                "Statistics could not be loaded."
+        }), 500
+
 
 
 # ============================================================

@@ -2,3 +2,7 @@ Flask
 requests
 qrcode
 Pillow
+SQLAlchemy>=2.0,<3.0
+PyMySQL>=1.1,<2.0
+psycopg[binary]>=3.2,<4.0
+pytest>=8.0,<9.0

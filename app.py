@@ -3687,29 +3687,32 @@ def attach_persistence(value, result):
     Persist a completed PhishLens analysis without changing the
     existing detection result.
 
-    Persistence is intentionally best-effort at this stage:
-    a database failure must not prevent the scanner from returning
+    Database persistence is best-effort at this stage:
+    a storage failure must not prevent the scanner from returning
     its security verdict.
     """
     try:
+
         scan_id = persist_scan(
             value,
-            result,
+            result
         )
 
         result["scan_id"] = scan_id
+
         result["storage"] = {
             "stored": True,
-            "scan_id": scan_id,
+            "scan_id": scan_id
         }
 
     except Exception:
+
         app.logger.exception(
             "PhishLens persistence error"
         )
 
         result["storage"] = {
-            "stored": False,
+            "stored": False
         }
 
     return result
@@ -3772,7 +3775,7 @@ def analyze():
 
         result = attach_persistence(
             value,
-            result,
+            result
         )
 
         return jsonify(
@@ -3836,7 +3839,7 @@ def analyze_qr():
 
         result = attach_persistence(
             payload,
-            result,
+            result
         )
 
         return jsonify(

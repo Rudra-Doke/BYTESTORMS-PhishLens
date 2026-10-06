@@ -16,6 +16,8 @@ import os
 import time
 import requests
 
+from persistence import persist_scan
+
 
 app = Flask(__name__)
 
@@ -3677,6 +3679,43 @@ def analyze_input(value):
 
 
 # ============================================================
+# DATABASE PERSISTENCE ADAPTER
+# ============================================================
+
+def attach_persistence(value, result):
+    """
+    Persist a completed PhishLens analysis without changing the
+    existing detection result.
+
+    Persistence is intentionally best-effort at this stage:
+    a database failure must not prevent the scanner from returning
+    its security verdict.
+    """
+    try:
+        scan_id = persist_scan(
+            value,
+            result,
+        )
+
+        result["scan_id"] = scan_id
+        result["storage"] = {
+            "stored": True,
+            "scan_id": scan_id,
+        }
+
+    except Exception:
+        app.logger.exception(
+            "PhishLens persistence error"
+        )
+
+        result["storage"] = {
+            "stored": False,
+        }
+
+    return result
+
+
+# ============================================================
 # ROUTES
 # ============================================================
 
@@ -3729,6 +3768,11 @@ def analyze():
 
         result = analyze_input(
             value
+        )
+
+        result = attach_persistence(
+            value,
+            result,
         )
 
         return jsonify(
@@ -3788,6 +3832,11 @@ def analyze_qr():
 
         result = analyze_input(
             payload
+        )
+
+        result = attach_persistence(
+            payload,
+            result,
         )
 
         return jsonify(

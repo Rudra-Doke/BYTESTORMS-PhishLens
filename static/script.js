@@ -2104,7 +2104,7 @@ function clearHistory() {
 // STATS
 // ============================================================
 
-function updateStats() {
+async function updateStats() {
 
     const analyses =
         document.getElementById(

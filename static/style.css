@@ -3905,3 +3905,71 @@ a {
         min-width: 92px;
     }
 }
+/* ============================================================
+   BACKEND PERSISTENCE META
+   ============================================================ */
+
+.persistence-meta {
+    margin-top: 18px;
+    padding: 16px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.persistence-meta-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+}
+
+.persistence-status {
+    padding: 5px 9px;
+    border-radius: 999px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+}
+
+.persistence-status.stored {
+    background: rgba(46, 204, 113, 0.12);
+}
+
+.persistence-status.not-stored {
+    background: rgba(231, 76, 60, 0.12);
+}
+
+.persistence-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.persistence-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.persistence-label {
+    font-size: 10px;
+    opacity: 0.55;
+    letter-spacing: 0.1em;
+}
+
+.persistence-value {
+    font-size: 13px;
+    word-break: break-word;
+}
+
+@media (max-width: 700px) {
+
+    .persistence-grid {
+        grid-template-columns: 1fr;
+    }
+}

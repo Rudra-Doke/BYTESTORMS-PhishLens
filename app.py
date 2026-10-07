@@ -27,6 +27,78 @@ from persistence import persist_scan
 
 app = Flask(__name__)
 
+app.config["MAX_CONTENT_LENGTH"] = 256 * 1024
+@app.after_request
+def apply_security_headers(response):
+    """Apply baseline security headers to every response."""
+
+    response.headers.setdefault(
+        "X-Content-Type-Options",
+        "nosniff",
+    )
+
+    response.headers.setdefault(
+        "X-Frame-Options",
+        "DENY",
+    )
+
+    response.headers.setdefault(
+        "Referrer-Policy",
+        "strict-origin-when-cross-origin",
+    )
+
+    response.headers.setdefault(
+        "Permissions-Policy",
+        "camera=(self), microphone=(), geolocation=()",
+    )
+
+    if request.is_secure:
+        response.headers.setdefault(
+            "Strict-Transport-Security",
+            "max-age=31536000; includeSubDomains",
+        )
+
+    return response
+# ============================================================
+# SECURITY HARDENING
+# ============================================================
+
+# Reject unexpectedly large request bodies.
+# URL/QR payloads are tiny, so 256 KiB is intentionally generous.
+app.config["MAX_CONTENT_LENGTH"] = 256 * 1024
+
+@app.after_request
+def apply_security_headers(response):
+    """Apply baseline HTTP security headers to every response."""
+
+    response.headers.setdefault(
+        "X-Content-Type-Options",
+        "nosniff",
+    )
+
+    response.headers.setdefault(
+        "X-Frame-Options",
+        "DENY",
+    )
+
+    response.headers.setdefault(
+        "Referrer-Policy",
+        "strict-origin-when-cross-origin",
+    )
+
+    response.headers.setdefault(
+        "Permissions-Policy",
+        "camera=(self), microphone=(), geolocation=()",
+    )
+
+    # HSTS is only meaningful when the request is already HTTPS.
+    if request.is_secure:
+        response.headers.setdefault(
+            "Strict-Transport-Security",
+            "max-age=31536000; includeSubDomains",
+        )
+
+    return response
 
 # ============================================================
 # PHISHLENS — MAX THREAT INTELLIGENCE ENGINE
@@ -3722,7 +3794,14 @@ def attach_persistence(value, result):
         }
 
     return result
+@app.errorhandler(413)
+def request_too_large(error):
+    """Return a controlled response when a request exceeds the size limit."""
 
+    return jsonify({
+        "error": "Request body is too large.",
+        "max_bytes": app.config["MAX_CONTENT_LENGTH"],
+    }), 413
 
 # ============================================================
 # ROUTES

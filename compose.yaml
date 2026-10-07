@@ -6,10 +6,10 @@ services:
     restart: unless-stopped
 
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-phishlensroot}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: phishlens
       MYSQL_USER: phishlens
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-phishlenspass}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
 
     ports:
       - "3307:3306"
@@ -41,7 +41,7 @@ services:
         condition: service_healthy
 
     environment:
-      PHISHLENS_DATABASE_URL: mysql+pymysql://phishlens:${MYSQL_PASSWORD:-phishlenspass}@mysql:3306/phishlens
+      PHISHLENS_DATABASE_URL: "mysql+pymysql://phishlens:${MYSQL_PASSWORD}@mysql:3306/phishlens"
 
     ports:
       - "5000:5000"

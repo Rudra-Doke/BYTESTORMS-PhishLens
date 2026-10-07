@@ -1,0 +1,50 @@
+services:
+
+  mysql:
+    image: mysql:8.4
+    container_name: phishlens-mysql
+    restart: unless-stopped
+
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-phishlensroot}
+      MYSQL_DATABASE: phishlens
+      MYSQL_USER: phishlens
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-phishlenspass}
+
+    ports:
+      - "3307:3306"
+
+    volumes:
+      - phishlens_mysql_data:/var/lib/mysql
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h 127.0.0.1 -uphishlens -p$${MYSQL_PASSWORD} --silent"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  phishlens:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: phishlens-app
+    restart: unless-stopped
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+    environment:
+      PHISHLENS_DATABASE_URL: mysql+pymysql://phishlens:${MYSQL_PASSWORD:-phishlenspass}@mysql:3306/phishlens
+
+    ports:
+      - "5000:5000"
+
+volumes:
+  phishlens_mysql_data:

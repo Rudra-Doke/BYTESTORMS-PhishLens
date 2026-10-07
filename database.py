@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from threading import Lock
 
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 
@@ -21,13 +21,36 @@ _SessionLocal: sessionmaker[Session] | None = None
 _init_lock = Lock()
 
 
+# Alembic is now the single source of truth for schema creation and changes.
+# These tables must exist before the application can use persistence safely.
+REQUIRED_TABLES = {
+    "alembic_version",
+    "domains",
+    "scans",
+    "redirects",
+    "threat_events",
+    "qr_scans",
+}
+
+
 def get_database_url() -> str:
     """
     Return the configured database URL.
 
-    Supports SQLite, MySQL, and PostgreSQL.
+    Examples:
+        SQLite:
+            sqlite:///C:/path/to/phishlens.db
+
+        MySQL:
+            mysql+pymysql://user:password@host/phishlens
+
+        PostgreSQL:
+            postgresql+psycopg://user:password@host/phishlens
     """
-    configured = os.getenv("PHISHLENS_DATABASE_URL", "").strip()
+    configured = os.getenv(
+        "PHISHLENS_DATABASE_URL",
+        "",
+    ).strip()
 
     if configured:
         return configured
@@ -37,9 +60,10 @@ def get_database_url() -> str:
 
 def init_database():
     """
-    Initialize the SQLAlchemy engine, session factory, and schema.
+    Initialize the SQLAlchemy engine and session factory.
 
-    Safe to call multiple times.
+    Schema creation and schema changes are intentionally NOT performed here.
+    Alembic owns the schema lifecycle for the enterprise branch.
     """
     global _engine, _SessionLocal
 
@@ -77,10 +101,9 @@ def init_database():
             expire_on_commit=False,
         )
 
-        # Import models after Base exists so SQLAlchemy sees every table.
+        # Import models after Base exists so all ORM metadata is registered.
+        # Alembic imports this metadata when generating migrations.
         import models  # noqa: F401
-
-        Base.metadata.create_all(_engine)
 
     return _engine
 
@@ -95,14 +118,27 @@ def get_session() -> Session:
 
 
 def database_healthcheck() -> bool:
-    """Return True when the database can execute a basic query."""
+    """
+    Return True when the database is reachable and the Alembic-managed schema
+    is present.
+
+    This deliberately does not create missing tables. Use:
+
+        alembic upgrade head
+
+    to apply schema changes.
+    """
     try:
         engine = init_database()
 
         with engine.connect() as connection:
             connection.execute(text("SELECT 1"))
 
-        return True
+            tables = set(
+                inspect(connection).get_table_names()
+            )
+
+        return REQUIRED_TABLES.issubset(tables)
 
     except Exception:
         return False

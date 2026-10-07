@@ -1,0 +1,40 @@
+name: PhishLens Tests
+
+on:
+  push:
+    branches:
+      - v4-enterprise
+  pull_request:
+    branches:
+      - v4-enterprise
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Prepare test database
+        env:
+          PHISHLENS_DATABASE_URL: sqlite:///instance/test_phishlens.db
+        run: |
+          mkdir -p instance
+          alembic upgrade head
+
+      - name: Run tests
+        env:
+          PHISHLENS_DATABASE_URL: sqlite:///instance/test_phishlens.db
+        run: |
+          python -m pytest -q

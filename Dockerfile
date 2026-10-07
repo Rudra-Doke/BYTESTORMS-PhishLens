@@ -30,7 +30,8 @@ COPY . .
 
 # Runtime directory for the default SQLite database.
 RUN mkdir -p /app/instance \
-    && chown -R phishlens:phishlens /app
+    && chown -R phishlens:phishlens /app \
+    && chmod 755 /app/instance
 
 USER phishlens
 

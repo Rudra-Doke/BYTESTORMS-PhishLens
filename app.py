@@ -1,4 +1,6 @@
 from flask import Flask, render_template, request, jsonify
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from urllib.parse import (
     urlparse,
     parse_qs,
@@ -27,7 +29,26 @@ from persistence import persist_scan
 
 app = Flask(__name__)
 
+
+# ============================================================
+# SECURITY HARDENING
+# ============================================================
+
 app.config["MAX_CONTENT_LENGTH"] = 256 * 1024
+
+
+limiter = Limiter(
+    key_func=get_remote_address,
+    app=app,
+    default_limits=[],
+    storage_uri=os.getenv(
+        "PHISHLENS_RATE_LIMIT_STORAGE_URI",
+        "memory://",
+    ),
+    strategy="fixed-window",
+)
+
+
 @app.after_request
 def apply_security_headers(response):
     """Apply baseline security headers to every response."""
@@ -65,7 +86,6 @@ def apply_security_headers(response):
 
 # Reject unexpectedly large request bodies.
 # URL/QR payloads are tiny, so 256 KiB is intentionally generous.
-app.config["MAX_CONTENT_LENGTH"] = 256 * 1024
 
 @app.after_request
 def apply_security_headers(response):
@@ -3803,6 +3823,16 @@ def request_too_large(error):
         "max_bytes": app.config["MAX_CONTENT_LENGTH"],
     }), 413
 
+@app.errorhandler(429)
+def rate_limit_exceeded(error):
+    """Return a controlled JSON response for rate-limited requests."""
+
+    return jsonify({
+        "error": "Rate limit exceeded.",
+        "message": "Too many analysis requests. Please try again later.",
+    }), 429
+
+
 # ============================================================
 # ROUTES
 # ============================================================
@@ -3819,6 +3849,7 @@ def home():
     "/analyze",
     methods=["POST"]
 )
+@limiter.limit("20 per minute")
 def analyze():
 
     data = request.get_json(
@@ -3885,6 +3916,7 @@ def analyze():
     "/analyze-qr",
     methods=["POST"]
 )
+@limiter.limit("20 per minute")
 def analyze_qr():
 
     data = request.get_json(

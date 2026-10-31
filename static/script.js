@@ -11,6 +11,8 @@ let lastQrFrameHint = 0;
 let pendingQrPayload = "";
 let deferredInstallPrompt = null;
 let qrTorchEnabled = false;
+let qrCameraDevices = [];
+let selectedQrCameraId = "";
 let scanCount = 0;
 let threatCount = 0;
 let scanHistory = [];
@@ -3336,11 +3338,7 @@ async function startQRScanner() {
         qrDecodeHandled = false;
 
         await qrScanner.start(
-
-            {
-                facingMode:
-                    "environment"
-            },
+            selectedQrCameraId ? { deviceId: { exact: selectedQrCameraId } } : { facingMode: "environment" },
 
             {
                 fps: 10,
@@ -3376,6 +3374,14 @@ async function startQRScanner() {
         const torchSupported = qrScanner.getRunningTrackCameraCapabilities?.().torchFeature?.().isSupported?.();
         if (torchButton) torchButton.classList.toggle("hidden", !torchSupported);
         initializeQRZoomControl();
+        try {
+            qrCameraDevices = await Html5Qrcode.getCameras();
+            const activeDeviceId = qrScanner.getRunningTrackSettings?.().deviceId;
+            if (activeDeviceId) selectedQrCameraId = activeDeviceId;
+            document.getElementById("qrSwitchCameraButton")?.classList.toggle("hidden", qrCameraDevices.length < 2);
+        } catch (error) {
+            document.getElementById("qrSwitchCameraButton")?.classList.add("hidden");
+        }
 
         document.querySelector(".analyzer-card")?.classList.add("is-qr-live");
         setAppStatus("qr");
@@ -3449,6 +3455,7 @@ async function stopQRScanner() {
     torchButton?.classList.add("hidden");
     torchButton?.setAttribute("aria-pressed", "false");
     if (torchButton) torchButton.textContent = "Turn on flashlight";
+    document.getElementById("qrSwitchCameraButton")?.classList.add("hidden");
 
     document.querySelector(".analyzer-card")?.classList.remove("is-qr-live");
     setAppStatus(document.getElementById("result")?.classList.contains("hidden") ? "ready" : "result");
@@ -3456,6 +3463,16 @@ async function stopQRScanner() {
     updateCameraStatus(
         "Camera scanner is inactive."
     );
+}
+
+async function switchQRCamera() {
+    if (!qrScanner?.isScanning || qrCameraDevices.length < 2) return;
+    const currentIndex = qrCameraDevices.findIndex(camera => camera.id === selectedQrCameraId);
+    const nextCamera = qrCameraDevices[(currentIndex + 1 + qrCameraDevices.length) % qrCameraDevices.length];
+    selectedQrCameraId = nextCamera.id;
+    updateCameraStatus(`Switching to ${nextCamera.label || "the next camera"}…`);
+    await stopQRScanner();
+    await startQRScanner();
 }
 
 async function toggleQRTorch() {

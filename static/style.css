@@ -3705,6 +3705,14 @@ a {
 .theme-choice[aria-pressed="true"] { border-color: rgba(212,175,112,.52); color: #ead8ad; background: rgba(212,175,112,.1); }
 .motion-setting { display: flex; align-items: center; gap: 9px; margin-top: 15px; color: #cbc7bd; font-size: 12px; cursor: pointer; }
 .motion-setting input { accent-color: #b99857; }
+.motion-intensity-options { margin-top: 14px; }
+body[data-motion-intensity="subtle"] .hero-radar { animation-duration: 24s; opacity: .45; }
+body[data-motion-intensity="subtle"] .hero-scan-line { animation-duration: 8s; opacity: .45; }
+body[data-motion-intensity="subtle"] .aurora { animation-duration: 32s; opacity: .45; }
+body[data-motion-intensity="cinematic"] .hero-radar { animation-duration: 8s; opacity: .9; }
+body[data-motion-intensity="cinematic"] .hero-scan-line { animation-duration: 2.4s; }
+body[data-motion-intensity="cinematic"] .aurora { animation-duration: 12s; }
+body[data-motion-intensity="cinematic"] .hero-shield-mark { filter: drop-shadow(0 0 22px rgba(214,183,106,.46)); }
 
 .visually-hidden {
     position: absolute !important;

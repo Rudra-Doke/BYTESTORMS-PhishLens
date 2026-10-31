@@ -25,6 +25,7 @@ const MAX_HISTORY = 20;
 const DISPLAY_KEY = "phishlens_display_preferences";
 let displayPreferences = {
     theme: "obsidian",
+    motionIntensity: "premium",
     reduceMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches
 };
 
@@ -244,6 +245,7 @@ function loadDisplayPreferences() {
         const stored = JSON.parse(localStorage.getItem(DISPLAY_KEY) || "{}");
         displayPreferences = {
             theme: stored.theme === "pearl" ? "pearl" : "obsidian",
+            motionIntensity: ["subtle", "premium", "cinematic"].includes(stored.motionIntensity) ? stored.motionIntensity : "premium",
             reduceMotion: typeof stored.reduceMotion === "boolean"
                 ? stored.reduceMotion
                 : window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -259,12 +261,16 @@ function loadDisplayPreferences() {
 function applyDisplayPreferences() {
     document.body.dataset.theme = displayPreferences.theme;
     document.body.dataset.motion = displayPreferences.reduceMotion ? "reduce" : "full";
+    document.body.dataset.motionIntensity = displayPreferences.motionIntensity;
 
     document.querySelectorAll("[data-theme-choice]").forEach(button => {
         button.setAttribute(
             "aria-pressed",
             String(button.dataset.themeChoice === displayPreferences.theme)
         );
+    });
+    document.querySelectorAll("[data-motion-choice]").forEach(button => {
+        button.setAttribute("aria-pressed", String(button.dataset.motionChoice === displayPreferences.motionIntensity));
     });
 
     const motionToggle = document.getElementById("reduceMotionToggle");
@@ -288,6 +294,13 @@ function initializeDisplayControls() {
     document.querySelectorAll("[data-theme-choice]").forEach(button => {
         button.addEventListener("click", () => {
             displayPreferences.theme = button.dataset.themeChoice;
+            saveDisplayPreferences();
+        });
+    });
+
+    document.querySelectorAll("[data-motion-choice]").forEach(button => {
+        button.addEventListener("click", () => {
+            displayPreferences.motionIntensity = button.dataset.motionChoice;
             saveDisplayPreferences();
         });
     });

@@ -1,5 +1,5 @@
-const CACHE_NAME = "phishlens-shell-v1";
-const APP_SHELL = ["/", "/static/style.css", "/static/script.js", "/static/manifest.webmanifest", "/static/phishlens-icon.svg"];
+const CACHE_NAME = "phishlens-shell-v2";
+const APP_SHELL = ["/", "/static/style.css", "/static/script.js", "/static/manifest.webmanifest", "/static/phishlens-icon.svg", "/static/phishlens-icon-192.png", "/static/phishlens-icon-512.png"];
 
 self.addEventListener("install", event => {
     event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));

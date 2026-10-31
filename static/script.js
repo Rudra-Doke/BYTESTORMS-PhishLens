@@ -289,8 +289,7 @@ function initializeKeyboardTabs() {
 
 
 function initializeQRImageInput() {
-    const input = document.getElementById("qrImageInput");
-    input?.addEventListener("change", async () => {
+    document.querySelectorAll("#qrImageInput, #qrCameraInput").forEach(input => input.addEventListener("change", async () => {
         const file = input.files?.[0];
         if (!file) return;
 
@@ -329,8 +328,8 @@ function initializeQRImageInput() {
         }
 
         showURL();
-        showQRPreview(payload, "QR image");
-    });
+        showQRPreview(payload, input.id === "qrCameraInput" ? "Camera photo" : "QR image");
+    }));
     document.getElementById("qrAnalyzeButton")?.addEventListener("click", async () => {
         const payload = pendingQrPayload;
         if (!payload) return;

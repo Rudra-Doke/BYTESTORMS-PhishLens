@@ -583,6 +583,7 @@
                 <label class="secondary-button qr-upload-button" for="qrImageInput">
                     Choose QR image
                 </label>
+                <label class="secondary-button qr-upload-button" for="qrCameraInput">Take QR photo</label>
 
                 <input
                         id="qrImageInput"
@@ -590,6 +591,7 @@
                         type="file"
                         accept="image/*"
                         aria-label="Choose an image containing a QR code">
+                <input id="qrCameraInput" class="visually-hidden" type="file" accept="image/*" capture="environment" aria-label="Take a photo of a QR code">
 
             </div>
 

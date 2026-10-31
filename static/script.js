@@ -9,6 +9,7 @@ let qrScanner = null;
 let qrDecodeHandled = false;
 let lastQrFrameHint = 0;
 let pendingQrPayload = "";
+let deferredInstallPrompt = null;
 let scanCount = 0;
 let threatCount = 0;
 let scanHistory = [];
@@ -72,6 +73,7 @@ function initializePhishLens() {
     initializeKeyboardTabs();
     initializeQRImageInput();
     initializeDisplayControls();
+    initializeAppInstall();
 
     if (input) {
 
@@ -96,6 +98,40 @@ function initializePhishLens() {
             clearOldResult();
         });
     }
+}
+
+function initializeAppInstall() {
+    const button = document.getElementById("installAppButton");
+    if (!button) return;
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+    if (isStandalone) return;
+
+    window.addEventListener("beforeinstallprompt", event => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        button.classList.remove("hidden");
+    });
+    window.addEventListener("appinstalled", () => {
+        deferredInstallPrompt = null;
+        button.classList.add("hidden");
+        showToast("PhishLens was added to your home screen.");
+    });
+
+    button.addEventListener("click", async () => {
+        if (deferredInstallPrompt) {
+            deferredInstallPrompt.prompt();
+            await deferredInstallPrompt.userChoice;
+            deferredInstallPrompt = null;
+            button.classList.add("hidden");
+            return;
+        }
+        const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+        showToast(isIOS
+            ? "To install PhishLens: tap Share, then Add to Home Screen."
+            : "Open your browser menu and choose Install app or Add to Home screen.");
+    });
+
+    if (/iphone|ipad|ipod/i.test(navigator.userAgent)) button.classList.remove("hidden");
 }
 
 

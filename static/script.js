@@ -3030,6 +3030,42 @@ function copyShareSafeSummary() {
     }
 }
 
+async function shareSafeSummary() {
+    const result = document.getElementById("result");
+    if (!result || result.classList.contains("hidden")) {
+        showToast("Run an analysis before sharing a summary.");
+        return;
+    }
+    const value = id => document.getElementById(id)?.innerText?.trim() || "Not available";
+    const text = [
+        "PHISHLENS — SHARE-SAFE SCAN SUMMARY",
+        "Destination details: Hidden",
+        "Verdict: " + value("verdictBadge"),
+        "Risk score: " + value("riskScore") + "/100",
+        "Engine confidence: " + value("confidenceValue"),
+        "Recommended next step: " + value("nextAction"),
+        "This summary omits the destination, scan ID, and raw reason text. A low score is not a guarantee of safety."
+    ].join("\n");
+    if (navigator.share) {
+        try {
+            await navigator.share({ title: "PhishLens scan summary", text });
+        } catch (error) {
+            if (error?.name !== "AbortError") showToast("Could not open the share menu.");
+        }
+        return;
+    }
+    if (navigator.clipboard?.writeText) {
+        try {
+            await navigator.clipboard.writeText(text);
+            showToast("Redacted summary copied. Destination details were omitted.");
+        } catch (error) {
+            fallbackCopy(text, "Redacted summary copied. Destination details were omitted.");
+        }
+    } else {
+        fallbackCopy(text, "Redacted summary copied. Destination details were omitted.");
+    }
+}
+
 
 function downloadReport() {
     const result = document.getElementById("result");

@@ -3817,8 +3817,8 @@ body[data-theme="pearl"] .history-filter-status, body[data-theme="pearl"] .histo
 body[data-theme="pearl"] .history-empty { color: #68645d; background: rgba(255,255,255,.35); border-color: rgba(88,78,57,.25); }
 body[data-theme="pearl"] .settings-panel { background: rgba(250,249,246,.98); border-color: rgba(151,116,58,.24); }
 body[data-theme="pearl"] .settings-panel legend, body[data-theme="pearl"] .motion-setting { color: #514d45; }
-body[data-theme="pearl"] .theme-choice { color: #514e47; background: rgba(90,80,60,.04); }
-body[data-theme="pearl"] .theme-choice[aria-pressed="true"] { color: #765c2e; }
+body[data-theme="pearl"] .theme-choice { color: #514e47; background: rgba(90,80,60,.035); border-color: rgba(89,79,57,.18); }
+body[data-theme="pearl"] .theme-choice[aria-pressed="true"] { color: #654a1d; background: rgba(212,175,112,.19); border-color: rgba(151,116,58,.62); box-shadow: inset 0 1px rgba(255,255,255,.82), 0 2px 8px rgba(95,72,30,.08); }
 body[data-theme="pearl"] .next-step-card p, body[data-theme="pearl"] .persistence-value { color: #4c4942; }
 
 @media (max-width: 720px) {

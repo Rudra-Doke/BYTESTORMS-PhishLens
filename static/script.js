@@ -74,6 +74,7 @@ function initializePhishLens() {
     initializeQRImageInput();
     initializeDisplayControls();
     initializeAppInstall();
+    initializeConnectionStatus();
 
     if (input) {
 
@@ -98,6 +99,18 @@ function initializePhishLens() {
             clearOldResult();
         });
     }
+}
+
+function initializeConnectionStatus() {
+    const banner = document.getElementById("connectionBanner");
+    if (!banner) return;
+    const update = () => {
+        banner.classList.toggle("hidden", navigator.onLine);
+        if (!navigator.onLine) updateCameraStatus("You're offline. Reconnect to scan QR codes or analyze destinations.");
+    };
+    window.addEventListener("online", update);
+    window.addEventListener("offline", update);
+    update();
 }
 
 function initializeAppInstall() {

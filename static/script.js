@@ -272,6 +272,17 @@ function applyDisplayPreferences() {
     document.querySelectorAll("[data-motion-choice]").forEach(button => {
         button.setAttribute("aria-pressed", String(button.dataset.motionChoice === displayPreferences.motionIntensity));
     });
+    const motionDescription = document.getElementById("motionIntensityDescription");
+    if (motionDescription) {
+        const descriptions = {
+            subtle: "Slower movement and softer glows.",
+            premium: "Balanced animation and movement.",
+            cinematic: "Faster orbits and stronger ambient glow."
+        };
+        motionDescription.textContent = displayPreferences.reduceMotion
+            ? "Reduce motion is on, so animations stay minimized."
+            : descriptions[displayPreferences.motionIntensity];
+    }
 
     const motionToggle = document.getElementById("reduceMotionToggle");
     if (motionToggle) {
@@ -314,6 +325,7 @@ function initializeDisplayControls() {
                 section.classList.add("is-visible");
             });
         }
+        applyDisplayPreferences();
     });
 }
 

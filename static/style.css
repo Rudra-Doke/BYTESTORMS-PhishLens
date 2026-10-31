@@ -3706,6 +3706,8 @@ a {
 .motion-setting { display: flex; align-items: center; gap: 9px; margin-top: 15px; color: #cbc7bd; font-size: 12px; cursor: pointer; }
 .motion-setting input { accent-color: #b99857; }
 .motion-intensity-options { margin-top: 14px; }
+.motion-intensity-description { min-height: 1.4em; margin: 9px 0 0; color: #92919a; font-size: 11px; line-height: 1.4; }
+body[data-theme="pearl"] .motion-intensity-description { color: #77736c; }
 
 .visually-hidden {
     position: absolute !important;

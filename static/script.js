@@ -78,6 +78,7 @@ function initializePhishLens() {
     initializeAppUpdates();
     initializeIncomingShare();
     initializePasteLink();
+    initializeClearLink();
 
     if (input) {
 
@@ -102,6 +103,17 @@ function initializePhishLens() {
             clearOldResult();
         });
     }
+}
+
+function initializeClearLink() {
+    const button = document.getElementById("clearUrlButton");
+    const input = document.getElementById("urlInput");
+    button?.addEventListener("click", () => {
+        if (!input) return;
+        input.value = "";
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.focus();
+    });
 }
 
 function initializePasteLink() {

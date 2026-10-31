@@ -5481,6 +5481,8 @@ body[data-theme="pearl"] .connection-banner { background: #fff2d7; color: #49381
 .paste-link-row { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
 .paste-link-row > button { padding: 8px 12px; font-size: 13px; }
 .paste-link-row > span { color: var(--muted, #a3a8b7); font-size: 12px; }
+.clear-url-button { width: 34px; height: 34px; flex: 0 0 auto; border: 1px solid var(--line, rgba(255,255,255,.14)); border-radius: 50%; background: transparent; color: var(--muted, #a3a8b7); font-size: 22px; line-height: 1; cursor: pointer; }
+.clear-url-button:hover, .clear-url-button:focus-visible { border-color: var(--gold, #d6b76a); color: var(--gold, #d6b76a); }
 @media (max-width: 720px) {
     body { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
     .mobile-action-bar { display: grid; grid-template-columns: repeat(3, 1fr); position: fixed; inset: auto 0 0; z-index: 100; padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid rgba(214,183,106,.28); background: rgba(12,12,16,.94); backdrop-filter: blur(18px); }

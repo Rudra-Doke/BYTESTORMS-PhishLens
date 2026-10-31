@@ -76,6 +76,7 @@ function initializePhishLens() {
     initializeAppInstall();
     initializeConnectionStatus();
     initializeAppUpdates();
+    initializeIncomingShare();
 
     if (input) {
 
@@ -100,6 +101,18 @@ function initializePhishLens() {
             clearOldResult();
         });
     }
+}
+
+function initializeIncomingShare() {
+    const params = new URLSearchParams(window.location.search);
+    const shared = (params.get("url") || params.get("text") || "").trim().slice(0, 4096);
+    if (!shared) return;
+    const input = document.getElementById("urlInput");
+    if (!input) return;
+    input.value = shared;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+    showToast("Shared content is ready for review. Start analysis when you’re ready.");
 }
 
 function initializeConnectionStatus() {

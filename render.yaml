@@ -2,7 +2,7 @@ services:
   - type: web
     name: phishlens
     runtime: docker
-    plan: starter
+    plan: free
     healthCheckPath: /
     envVars:
       - key: PHISHLENS_DATABASE_URL
@@ -18,7 +18,7 @@ services:
 
 databases:
   - name: phishlens-db
-    plan: basic-256mb
+    plan: free
     databaseName: phishlens
     user: phishlens
     postgresMajorVersion: "16"

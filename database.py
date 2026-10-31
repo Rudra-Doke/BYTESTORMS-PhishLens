@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import tempfile
 from pathlib import Path
 from threading import Lock
 
@@ -86,6 +87,25 @@ def init_database():
 
         if database_url.startswith("sqlite:"):
             connect_args["check_same_thread"] = False
+        elif database_url.startswith(("mysql://", "mysql+pymysql://")):
+            # Aiven project CA certificate is supplied as a secret value in
+            # deployments; verify both the certificate chain and hostname.
+            ca_pem = os.getenv("PHISHLENS_DATABASE_SSL_CA", "").strip()
+            if ca_pem:
+                ca_file = tempfile.NamedTemporaryFile(
+                    mode="w", encoding="utf-8", suffix="-phishlens-ca.pem", delete=False
+                )
+                try:
+                    ca_file.write(ca_pem)
+                    ca_file.close()
+                    connect_args["ssl_ca"] = ca_file.name
+                    connect_args["ssl_verify_cert"] = True
+                    connect_args["ssl_verify_identity"] = True
+                except Exception:
+                    ca_file.close()
+                    raise
+            if database_url.startswith("mysql://"):
+                database_url = "mysql+pymysql://" + database_url[len("mysql://"):]
 
         _engine = create_engine(
             database_url,

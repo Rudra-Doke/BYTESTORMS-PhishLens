@@ -10,6 +10,7 @@ let qrDecodeHandled = false;
 let lastQrFrameHint = 0;
 let pendingQrPayload = "";
 let deferredInstallPrompt = null;
+let qrTorchEnabled = false;
 let scanCount = 0;
 let threatCount = 0;
 let scanHistory = [];
@@ -3371,6 +3372,10 @@ async function startQRScanner() {
             }
         );
 
+        const torchButton = document.getElementById("qrTorchButton");
+        const torchSupported = qrScanner.getRunningTrackCameraCapabilities?.().torchFeature?.().isSupported?.();
+        if (torchButton) torchButton.classList.toggle("hidden", !torchSupported);
+
         document.querySelector(".analyzer-card")?.classList.add("is-qr-live");
         setAppStatus("qr");
 
@@ -3438,6 +3443,11 @@ async function stopQRScanner() {
     }
 
     qrScanner = null;
+    qrTorchEnabled = false;
+    const torchButton = document.getElementById("qrTorchButton");
+    torchButton?.classList.add("hidden");
+    torchButton?.setAttribute("aria-pressed", "false");
+    if (torchButton) torchButton.textContent = "Turn on flashlight";
 
     document.querySelector(".analyzer-card")?.classList.remove("is-qr-live");
     setAppStatus(document.getElementById("result")?.classList.contains("hidden") ? "ready" : "result");
@@ -3445,6 +3455,29 @@ async function stopQRScanner() {
     updateCameraStatus(
         "Camera scanner is inactive."
     );
+}
+
+async function toggleQRTorch() {
+    if (!qrScanner?.isScanning) return;
+    const button = document.getElementById("qrTorchButton");
+    try {
+        const capabilities = qrScanner.getRunningTrackCameraCapabilities?.();
+        const supported = capabilities?.torchFeature?.().isSupported?.();
+        if (!supported) {
+            button?.classList.add("hidden");
+            showToast("Flashlight control is not supported by this camera.");
+            return;
+        }
+        const nextValue = !qrTorchEnabled;
+        await qrScanner.applyVideoConstraints({ advanced: [{ torch: nextValue }] });
+        qrTorchEnabled = nextValue;
+        if (button) {
+            button.textContent = nextValue ? "Turn off flashlight" : "Turn on flashlight";
+            button.setAttribute("aria-pressed", String(nextValue));
+        }
+    } catch (error) {
+        showToast("Could not change the flashlight. Your camera may not support it.");
+    }
 }
 
 

@@ -5478,6 +5478,9 @@ body::before { animation: atmosphere-breathe 18s ease-in-out infinite alternate;
 .app-update-banner button { padding: 7px 12px; border: 1px solid rgba(95,190,132,.6); border-radius: 8px; background: transparent; color: inherit; cursor: pointer; }
 body[data-theme="pearl"] .connection-banner { background: #fff2d7; color: #493819; }
 .mobile-action-bar { display: none; }
+.paste-link-row { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+.paste-link-row > button { padding: 8px 12px; font-size: 13px; }
+.paste-link-row > span { color: var(--muted, #a3a8b7); font-size: 12px; }
 @media (max-width: 720px) {
     body { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
     .mobile-action-bar { display: grid; grid-template-columns: repeat(3, 1fr); position: fixed; inset: auto 0 0; z-index: 100; padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid rgba(214,183,106,.28); background: rgba(12,12,16,.94); backdrop-filter: blur(18px); }
@@ -5485,6 +5488,7 @@ body[data-theme="pearl"] .connection-banner { background: #fff2d7; color: #49381
     .mobile-action-bar button span { color: #d6b76a; font-size: 20px; line-height: 1; }
     body[data-theme="pearl"] .mobile-action-bar { background: rgba(250,248,242,.96); border-color: rgba(151,116,58,.25); }
     body[data-theme="pearl"] .mobile-action-bar button { color: #514b40; }
+    .paste-link-row { align-items: flex-start; flex-direction: column; gap: 6px; }
 }
 
 @media (max-width: 540px) {

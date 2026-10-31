@@ -77,6 +77,7 @@ function initializePhishLens() {
     initializeConnectionStatus();
     initializeAppUpdates();
     initializeIncomingShare();
+    initializePasteLink();
 
     if (input) {
 
@@ -101,6 +102,34 @@ function initializePhishLens() {
             clearOldResult();
         });
     }
+}
+
+function initializePasteLink() {
+    const button = document.getElementById("pasteLinkButton");
+    const input = document.getElementById("urlInput");
+    button?.addEventListener("click", async () => {
+        if (!navigator.clipboard?.readText) {
+            showToast("Clipboard paste is unavailable here. Tap the field and paste manually.");
+            input?.focus();
+            return;
+        }
+        try {
+            const value = (await navigator.clipboard.readText()).trim();
+            if (!value) {
+                showToast("The clipboard is empty.");
+                return;
+            }
+            if (input) {
+                input.value = value;
+                input.dispatchEvent(new Event("input", { bubbles: true }));
+                input.focus();
+            }
+            showToast("Pasted. Review the content, then start analysis.");
+        } catch (error) {
+            showToast("Clipboard access was blocked. Tap the field and paste manually.");
+            input?.focus();
+        }
+    });
 }
 
 function initializeIncomingShare() {

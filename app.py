@@ -1679,6 +1679,9 @@ def analyze_upi(url):
         [""]
     )[0]
 
+    # UPI uses INR when the optional currency parameter is omitted.
+    currency = (currency or "INR").strip().upper()
+
     risk = 0
     reasons = []
 
@@ -1749,6 +1752,19 @@ def analyze_upi(url):
         amount
     )
 
+    # Some Indian QR payloads provide the fixed amount as whole paise
+    # (for example, 110000 for INR 1,100). Normalize those values before
+    # showing the payment amount or applying amount-based risk rules.
+    if (
+            numeric_amount is not None
+            and currency == "INR"
+            and numeric_amount >= 10000
+            and numeric_amount.is_integer()
+            and int(numeric_amount) % 100 == 0
+    ):
+        numeric_amount /= 100
+        amount = f"{numeric_amount:.2f}".rstrip("0").rstrip(".")
+
     if amount:
 
         if numeric_amount is None:
@@ -1768,15 +1784,25 @@ def analyze_upi(url):
                 "The payment amount is invalid."
             )
 
-    if (
-            numeric_amount is not None
-            and numeric_amount >= 100000
-    ):
-
-        risk += 10
-
+    # Apply the same nominal threshold to every currency code. This is a
+    # payment caution signal, not an exchange-rate conversion or fraud claim.
+    if numeric_amount is not None and numeric_amount > 3000:
+        risk += 40
         reasons.append(
-            "The payment amount is unusually high."
+            "The payment amount is above 3,000 "
+            f"{currency}; verify it carefully before approving."
+        )
+
+    if numeric_amount is not None and numeric_amount > 10000:
+        risk += 20
+        reasons.append(
+            "The payment amount is substantially above the review threshold."
+        )
+
+    if numeric_amount is not None and numeric_amount > 50000:
+        risk += 15
+        reasons.append(
+            "The payment amount is exceptionally high."
         )
 
     risk = min(
@@ -1821,6 +1847,83 @@ def analyze_upi(url):
 # UNIVERSAL QR / PAYLOAD CLASSIFICATION
 # ============================================================
 
+EMV_CURRENCY_CODES = {
+    "036": "AUD", "124": "CAD", "156": "CNY", "356": "INR",
+    "392": "JPY", "410": "KRW", "458": "MYR", "484": "MXN",
+    "554": "NZD", "608": "PHP", "702": "SGD", "710": "ZAR",
+    "764": "THB", "784": "AED", "826": "GBP", "840": "USD",
+    "978": "EUR", "949": "TRY"
+}
+
+
+def emv_crc16(payload_bytes):
+    crc = 0xFFFF
+    for byte in payload_bytes:
+        crc ^= byte << 8
+        for _ in range(8):
+            crc = ((crc << 1) ^ 0x1021) & 0xFFFF if crc & 0x8000 else (crc << 1) & 0xFFFF
+    return crc
+
+
+def parse_emv_payment_qr(payload):
+    """Parse top-level EMVCo merchant-presented QR fields safely."""
+    raw_bytes = payload.encode("utf-8")
+    offset = 0
+    fields = {}
+    crc_input = None
+
+    while offset < len(raw_bytes):
+        if offset + 4 > len(raw_bytes):
+            return None
+        try:
+            tag = raw_bytes[offset:offset + 2].decode("ascii")
+            length = int(raw_bytes[offset + 2:offset + 4].decode("ascii"))
+        except (UnicodeDecodeError, ValueError):
+            return None
+        offset += 4
+        value_start = offset
+        end = offset + length
+        if end > len(raw_bytes):
+            return None
+        try:
+            value = raw_bytes[offset:end].decode("utf-8")
+        except UnicodeDecodeError:
+            value = raw_bytes[offset:end].decode("utf-8", errors="replace")
+        fields[tag] = value
+        if tag == "63":
+            crc_input = raw_bytes[:value_start]
+        offset = end
+
+    if fields.get("00") != "01" or not any(
+        key.isdigit() and 26 <= int(key) <= 51 for key in fields
+    ):
+        return None
+
+    numeric_currency = fields.get("53")
+    crc_value = fields.get("63", "")
+    if crc_input is None:
+        crc_status = "missing"
+    elif len(crc_value) != 4 or not re.fullmatch(r"[0-9A-Fa-f]{4}", crc_value):
+        crc_status = "invalid"
+    else:
+        crc_status = "valid" if emv_crc16(crc_input) == int(crc_value, 16) else "invalid"
+
+    return {
+        "type": "QR PAYMENT",
+        "display": "EMVCo merchant payment QR",
+        "data": {
+            "merchant_name": fields.get("59"),
+            "merchant_city": fields.get("60"),
+            "amount": fields.get("54"),
+            "currency": EMV_CURRENCY_CODES.get(numeric_currency, numeric_currency),
+            "currency_numeric": numeric_currency,
+            "country": fields.get("58"),
+            "initiation_method": fields.get("01"),
+            "checksum_status": crc_status,
+            "has_merchant_account": True
+        }
+    }
+
 def classify_payload(payload):
 
     raw = (
@@ -1837,6 +1940,11 @@ def classify_payload(payload):
             "display": "Empty QR payload",
             "data": {}
         }
+
+    if lower.startswith("000201"):
+        emv_payment = parse_emv_payment_qr(raw)
+        if emv_payment:
+            return emv_payment
 
     if lower.startswith(
             "upi://"
@@ -1896,7 +2004,8 @@ def classify_payload(payload):
             "data": {
                 "ssid": ssid,
                 "security": security,
-                "hidden": hidden
+                "hidden": hidden,
+                "password_included": bool(fields.get("p"))
             }
         }
 
@@ -1944,6 +2053,24 @@ def classify_payload(payload):
             }
         }
 
+    if lower.startswith("mecard:"):
+        content = raw[6:].strip().rstrip(";")
+        fields = {}
+        for match in re.finditer(r"(?:^|;)(N|TEL|EMAIL|ORG|URL):([^;]*)", content, re.I):
+            fields.setdefault(match.group(1).upper(), match.group(2).strip())
+
+        return {
+            "type": "CONTACT",
+            "display": "Contact / MECARD",
+            "data": {
+                "name": fields.get("N"),
+                "phone": fields.get("TEL"),
+                "email": fields.get("EMAIL"),
+                "organization": fields.get("ORG"),
+                "website": fields.get("URL")
+            }
+        }
+
     if lower.startswith(
             "mailto:"
     ):
@@ -1987,6 +2114,89 @@ def classify_payload(payload):
                 "message": parse_qs(
                     parsed.query
                 )
+            }
+        }
+
+    if lower.startswith(("smsto:", "mmsto:")):
+        _, _, rest = raw.partition(":")
+        destination, separator, message = rest.partition(":")
+        return {
+            "type": "SMS",
+            "display": "SMS message",
+            "data": {
+                "destination": destination,
+                "message": message if separator else ""
+            }
+        }
+
+    if lower.startswith("matmsg:"):
+        fields = {}
+        content = raw[7:].strip().rstrip(";")
+        for match in re.finditer(r"(?:^|;)(TO|SUB|BODY):([^;]*)", content, re.I):
+            fields.setdefault(match.group(1).upper(), match.group(2).strip())
+        return {
+            "type": "EMAIL",
+            "display": "Email message",
+            "data": {
+                "email": fields.get("TO"),
+                "subject": fields.get("SUB"),
+                "body": fields.get("BODY")
+            }
+        }
+
+    if lower.startswith("geo:"):
+        parsed = urlparse(raw)
+        coordinates, _, query = parsed.path.partition("?")
+        values = coordinates.split(",")
+        try:
+            latitude = float(values[0])
+            longitude = float(values[1])
+            valid = -90 <= latitude <= 90 and -180 <= longitude <= 180
+        except (ValueError, IndexError):
+            latitude = longitude = None
+            valid = False
+        return {
+            "type": "LOCATION",
+            "display": "Map location",
+            "data": {
+                "latitude": latitude,
+                "longitude": longitude,
+                "valid_coordinates": valid,
+                "query": parse_qs(query).get("q", [None])[0]
+            }
+        }
+
+    if lower.startswith("begin:vevent"):
+        fields = {}
+        for line in raw.splitlines():
+            key, separator, value = line.partition(":")
+            if not separator:
+                continue
+            key = key.split(";", 1)[0].upper()
+            if key in {"SUMMARY", "DTSTART", "DTEND", "LOCATION", "ORGANIZER", "URL"}:
+                fields.setdefault(key, value.strip())
+        return {
+            "type": "CALENDAR EVENT",
+            "display": "Calendar event invitation",
+            "data": {
+                "title": fields.get("SUMMARY"),
+                "starts": fields.get("DTSTART"),
+                "ends": fields.get("DTEND"),
+                "location": fields.get("LOCATION"),
+                "organizer": fields.get("ORGANIZER"),
+                "event_link_present": bool(fields.get("URL"))
+            }
+        }
+
+    if re.match(r"^(bitcoin|ethereum|litecoin|dogecoin|monero|solana):", lower):
+        parsed = urlparse(raw)
+        return {
+            "type": "CRYPTO PAYMENT",
+            "display": "Cryptocurrency payment request",
+            "data": {
+                "currency": parsed.scheme.upper(),
+                "address": parsed.path[:160],
+                "parameters": parse_qs(parsed.query)
             }
         }
 
@@ -2131,6 +2341,61 @@ def analyze_non_url_payload(
         reasons.append(
             "This QR contains an SMS destination."
         )
+
+    elif qr_type == "CRYPTO PAYMENT":
+        risk = 40
+        reasons.append(
+            "Cryptocurrency transfers are usually irreversible. "
+            "Verify the recipient and amount independently before sending."
+        )
+
+    elif qr_type == "CALENDAR EVENT":
+        risk = 10
+        reasons.append(
+            "Verify the event organizer and any location or link before attending."
+        )
+
+    elif qr_type == "LOCATION":
+        risk = 0
+        reasons.append(
+            "This QR contains map coordinates; no website destination was found."
+        )
+
+    elif qr_type == "QR PAYMENT":
+        risk = 30
+        reasons.append(
+            "A merchant payment QR was recognized, but PhishLens cannot verify "
+            "the merchant account or payment destination. Confirm the recipient "
+            "in your payment app before approving."
+        )
+        checksum_status = info.get("checksum_status")
+        if checksum_status == "invalid":
+            risk += 30
+            reasons.append(
+                "The payment QR checksum is invalid; its encoded data may be damaged or altered."
+            )
+        elif checksum_status == "missing":
+            risk += 15
+            reasons.append(
+                "No valid payment QR checksum was available to verify payload integrity."
+            )
+        amount = safe_float(info.get("amount"))
+        currency = info.get("currency") or info.get("currency_numeric") or "currency units"
+        if amount is not None and amount > 3000:
+            risk += 40
+            reasons.append(
+                f"The payment amount is above 3,000 {currency}; verify it carefully."
+            )
+        if amount is not None and amount > 10000:
+            risk += 20
+            reasons.append(
+                "The payment amount is substantially above the review threshold."
+            )
+        if amount is not None and amount > 50000:
+            risk += 10
+            reasons.append(
+                "The payment amount is exceptionally high."
+            )
 
     elif qr_type == "TEXT":
 

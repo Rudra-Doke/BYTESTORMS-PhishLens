@@ -76,6 +76,7 @@
 
             <button
                     type="button"
+                    aria-label="Go to URL analyzer"
                     onclick="scrollToScanner()">
 
                 Analyzer
@@ -85,6 +86,7 @@
 
             <button
                     type="button"
+                    aria-label="Go to recent scan history"
                     onclick="showHistory()">
 
                 History
@@ -92,13 +94,34 @@
             </button>
 
 
-            <div class="protection-pill">
+            <div id="appStatus" class="protection-pill" data-state="ready" role="status" aria-live="polite" title="PhishLens analyzes destinations only when you start a scan.">
 
-                <span class="status-dot"></span>
+                <span class="status-dot" aria-hidden="true"></span>
 
-                Protection Active
+                <span id="appStatusLabel">Scanner Ready</span>
 
             </div>
+
+
+            <details class="display-settings">
+
+                <summary aria-label="Display and accessibility settings">Display</summary>
+
+                <div class="settings-panel">
+                    <fieldset>
+                        <legend>Color theme</legend>
+                        <div class="theme-options">
+                            <button type="button" class="theme-choice" data-theme-choice="obsidian" aria-pressed="true">Obsidian</button>
+                            <button type="button" class="theme-choice" data-theme-choice="pearl" aria-pressed="false">Pearl</button>
+                        </div>
+                    </fieldset>
+                    <label class="motion-setting" for="reduceMotionToggle">
+                        <input id="reduceMotionToggle" type="checkbox">
+                        <span>Reduce motion</span>
+                    </label>
+                </div>
+
+            </details>
 
         </nav>
 
@@ -195,6 +218,45 @@
 
     </div>
 
+
+    <div class="hero-visual" aria-hidden="true">
+        <div class="hero-visual-grid"></div>
+        <div class="hero-orbit hero-orbit-outer"></div>
+        <div class="hero-orbit hero-orbit-inner"></div>
+
+        <div class="hero-scan-frame">
+            <span class="scan-corner scan-corner-tl"></span>
+            <span class="scan-corner scan-corner-tr"></span>
+            <span class="scan-corner scan-corner-bl"></span>
+            <span class="scan-corner scan-corner-br"></span>
+            <div class="hero-shield-mark">
+                <svg viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M60 7L104 24V59C104 91 85 117 60 132C35 117 16 91 16 59V24L60 7Z" stroke="currentColor" stroke-width="2"/>
+                    <path d="M60 22L91 34V59C91 81 79 99 60 112C41 99 29 81 29 59V34L60 22Z" stroke="currentColor" stroke-opacity=".4"/>
+                    <path d="M45 51V45H51M69 45H75V51M75 77V83H69M51 83H45V77" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="60" cy="64" r="11" stroke="currentColor" stroke-width="2"/>
+                    <circle cx="60" cy="64" r="3" fill="currentColor"/>
+                    <path d="M60 48V53M60 75V80M44 64H49M71 64H76" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <div class="hero-scan-line"></div>
+        </div>
+
+        <div class="hero-visual-tag hero-visual-tag-top">
+            <span class="visual-tag-dot"></span>
+            ANALYSIS READY
+        </div>
+        <div class="hero-visual-card hero-visual-card-left">
+            <span>INPUT TYPES</span>
+            <strong>LINK <i>·</i> QR <i>·</i> PAYMENT</strong>
+        </div>
+        <div class="hero-visual-card hero-visual-card-right">
+            <span>BEFORE YOU OPEN</span>
+            <strong>Inspect the destination</strong>
+        </div>
+        <div class="hero-visual-index">PL / 01</div>
+    </div>
+
 </section>
 
 
@@ -242,11 +304,16 @@
 
         <!-- TABS -->
 
-        <div class="scanner-tabs">
+        <div class="scanner-tabs" role="tablist" aria-label="Analysis method">
 
             <button
                     type="button"
+                    id="urlAnalysisTab"
                     class="scanner-tab active"
+                    aria-selected="true"
+                    aria-controls="urlSection"
+                    role="tab"
+                    tabindex="0"
                     onclick="showURL()">
 
                 <span class="tab-icon">
@@ -260,7 +327,12 @@
 
             <button
                     type="button"
+                    id="qrAnalysisTab"
                     class="scanner-tab"
+                    aria-selected="false"
+                    aria-controls="qrSection"
+                    role="tab"
+                    tabindex="-1"
                     onclick="showQR()">
 
                 <span class="tab-icon">
@@ -281,7 +353,9 @@
 
         <div
                 id="urlSection"
-                class="scanner-section">
+                class="scanner-section"
+                role="tabpanel"
+                aria-labelledby="urlAnalysisTab">
 
             <div class="destination-heading">
 
@@ -299,16 +373,17 @@
             <div class="url-input-wrapper">
 
                 <span class="protocol-prefix">
-                    HTTPS://
+                    URL
                 </span>
 
 
                 <input
                         id="urlInput"
                         type="text"
+                        aria-label="URL or payment link to analyze"
                         autocomplete="off"
                         spellcheck="false"
-                        placeholder="example.com/login">
+                        placeholder="https://example.com/login">
 
 
                 <button
@@ -393,7 +468,9 @@
 
         <div
                 id="qrSection"
-                class="scanner-section hidden">
+                class="scanner-section hidden"
+                role="tabpanel"
+                aria-labelledby="qrAnalysisTab">
 
             <div class="qr-header">
 
@@ -411,7 +488,7 @@
 
                     Point your camera at a QR code.
                     PhishLens decodes the destination
-                    and analyzes it before opening the link.
+                    and analyzes it before opening the link. You can scan with your camera or choose an image.
 
                 </p>
 
@@ -479,22 +556,45 @@
 
                 </button>
 
+
+                <label class="secondary-button qr-upload-button" for="qrImageInput">
+                    Choose QR image
+                </label>
+
+                <input
+                        id="qrImageInput"
+                        class="visually-hidden"
+                        type="file"
+                        accept="image/*"
+                        aria-label="Choose an image containing a QR code">
+
             </div>
+
+            <section id="qrPreview" class="qr-preview hidden" aria-live="polite" aria-labelledby="qrPreviewTitle">
+                <div><span class="section-label">DECODED CONTENT</span><h3 id="qrPreviewTitle">Review before analysis</h3>
+                <p id="qrPreviewKind">QR payload</p></div>
+                <pre id="qrPreviewPayload" class="qr-preview-payload"></pre>
+                <p id="qrPreviewGuidance" class="qr-preview-guidance"></p>
+                <div class="qr-preview-actions">
+                    <button id="qrAnalyzeButton" class="primary-button" type="button">Analyze content</button>
+                    <button id="qrCopyButton" class="secondary-button" type="button">Copy decoded text</button>
+                    <button id="qrDismissButton" class="secondary-button" type="button">Dismiss</button>
+                </div>
+                <p class="qr-preview-note">This content is shown for review. PhishLens will not open links or perform payment actions.</p>
+            </section>
 
 
             <div
                     id="cameraStatus"
-                    class="camera-status">
+                    class="camera-status"
+                    role="status"
+                    aria-live="polite"
+                    aria-atomic="true">
 
-                Camera scanner is inactive.
+                Camera is off. It starts only when you choose Start Camera. Camera access requires your permission and a secure page (HTTPS or localhost).
 
             </div>
 
-
-            <div
-                    id="qrStatus"
-                    class="camera-status">
-            </div>
 
         </div>
 
@@ -627,7 +727,10 @@
 
         <div
                 id="result"
-                class="result-section hidden">
+                class="result-section hidden"
+                role="region"
+                aria-labelledby="resultTitle"
+                tabindex="-1">
 
 
             <!-- RESULT HEADER -->
@@ -645,9 +748,14 @@
                     </div>
 
 
-                    <h2 id="resultTitle">
+                    <h2 id="resultTitle" aria-live="polite">
                         Destination analyzed
                     </h2>
+
+                    <div class="next-step-card" aria-live="polite">
+                        <span class="section-label">RECOMMENDED NEXT STEP</span>
+                        <p id="nextAction">Review the result before opening the destination.</p>
+                    </div>
 
 
                     <div class="result-destination">
@@ -703,20 +811,24 @@
 
             </div>
 
+            <p class="risk-score-note">A low score is not a guarantee that a destination is safe. Check the sender and context before sharing personal or payment information.</p>
+
 
 
             <!-- =================================================
                  THREAT BREAKDOWN
             ================================================= -->
 
-            <div class="result-grid">
+            <div id="resultGrid" class="result-grid">
 
 
-                <div class="threat-breakdown">
+                <div id="threatBreakdown" class="threat-breakdown">
 
                     <div class="result-section-title">
-                        THREAT BREAKDOWN
+                        SIGNAL BREAKDOWN
                     </div>
+
+                    <p class="signal-method-note">Signal levels are returned by the analysis engine. They are not probabilities; PhishLens does not expose a per-signal contribution to the combined risk score.</p>
 
 
                     <!-- URL -->
@@ -730,7 +842,7 @@
                             </span>
 
                             <small>
-                                Pattern analysis
+                                URL features
                             </small>
 
                         </div>
@@ -744,6 +856,7 @@
                             </div>
 
                         </div>
+                        <span id="urlSignalValue" class="signal-value">—</span>
 
                     </div>
 
@@ -759,7 +872,7 @@
                             </span>
 
                             <small>
-                                Identity analysis
+                                Domain indicators
                             </small>
 
                         </div>
@@ -773,6 +886,7 @@
                             </div>
 
                         </div>
+                        <span id="domainSignalValue" class="signal-value">—</span>
 
                     </div>
 
@@ -788,7 +902,7 @@
                             </span>
 
                             <small>
-                                Transport analysis
+                                Security indicators
                             </small>
 
                         </div>
@@ -802,6 +916,19 @@
                             </div>
 
                         </div>
+                        <span id="securitySignalValue" class="signal-value">—</span>
+
+                    </div>
+
+                    <div class="signal-row">
+                        <div class="signal-heading">
+                            <span>REDIRECT PATH</span>
+                            <small>Redirect indicators</small>
+                        </div>
+                        <div class="signal-track">
+                            <div id="redirectSignal" class="signal-fill"></div>
+                        </div>
+                        <span id="redirectSignalValue" class="signal-value">—</span>
 
                     </div>
 
@@ -814,7 +941,7 @@
                 <div class="why-result">
 
                     <div class="result-section-title">
-                        WHY THIS RESULT?
+                        REASONS RETURNED BY THE ANALYSIS
                     </div>
 
 
@@ -824,15 +951,21 @@
                     </div>
 
 
-                    <div
-                            id="reasons"
-                            class="reasons-list">
-                    </div>
-
                 </div>
 
             </div>
 
+
+
+            <details id="checksPerformed" class="checks-performed">
+                <summary>
+                    <span class="section-label">CHECKS PERFORMED</span>
+                    <span id="checksPerformedSummary" class="checks-summary">Details from this analysis</span>
+                    <span class="checks-toggle" aria-hidden="true">+</span>
+                </summary>
+                <p class="checks-disclaimer">Statuses reflect checks returned for this scan. A source that was unavailable or not configured did not contribute live data.</p>
+                <ul id="checksPerformedList" class="checks-list" aria-live="polite"></ul>
+            </details>
 
 
             <!-- =================================================
@@ -1054,6 +1187,20 @@
 
 
 
+            <section id="qrContentCard" class="domain-intelligence qr-content-card hidden" aria-live="polite">
+                <div class="domain-intelligence-header">
+                    <div>
+                        <span class="section-label">DECODED QR CONTENT</span>
+                        <h3 id="qrContentTitle">QR details</h3>
+                    </div>
+                    <span class="intel-status">TEXT ONLY</span>
+                </div>
+                <div id="qrContentGrid" class="domain-intelligence-grid"></div>
+                <p class="qr-content-note">Shown as text for review. PhishLens does not open links, send messages, connect to networks, or perform payment actions.</p>
+            </section>
+
+
+
             <!-- =================================================
                  REDIRECT INTELLIGENCE
             ================================================= -->
@@ -1141,11 +1288,11 @@
                     <div>
 
                         <span class="section-label">
-                            ENGINE CONFIDENCE
+                            ENGINE CONFIDENCE ESTIMATE
                         </span>
 
                         <h3>
-                            Detection confidence
+                            Engine estimate
                         </h3>
 
                     </div>
@@ -1162,7 +1309,13 @@
 
                     <div
                             id="confidenceBar"
-                            class="confidence-fill">
+                            class="confidence-fill"
+                            role="progressbar"
+                            aria-label="Engine confidence estimate"
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                            aria-valuenow="0"
+                            aria-valuetext="Not available">
                     </div>
 
                 </div>
@@ -1170,8 +1323,7 @@
 
                 <p id="confidenceText">
 
-                    Confidence will be calculated
-                    from independent security signals.
+                    The engine estimate is not a probability that the destination is safe or malicious.
 
                 </p>
 
@@ -1251,9 +1403,39 @@
                 <button
                         type="button"
                         class="secondary-button"
+                        onclick="copyShareSafeSummary()">
+
+                    Copy Redacted Summary
+
+                </button>
+
+
+                <button
+                        type="button"
+                        class="secondary-button"
                         onclick="copyResult()">
 
                     Copy Report
+
+                </button>
+
+
+                <button
+                        type="button"
+                        class="secondary-button"
+                        onclick="downloadPDFReport()">
+
+                    Save PDF
+
+                </button>
+
+
+                <button
+                        type="button"
+                        class="secondary-button"
+                        onclick="downloadReport()">
+
+                    Export .txt
 
                 </button>
 
@@ -1301,8 +1483,7 @@
 
             <p class="section-description">
 
-                Every scan stays on this device so you can
-                review previously analyzed destinations.
+                Review completed analyses saved to your PhishLens database or kept on this device.
 
             </p>
 
@@ -1318,7 +1499,7 @@
                 </strong>
 
                 <span>
-                    TOTAL SCANS
+                    SAVED SCANS
                 </span>
 
             </div>
@@ -1331,7 +1512,7 @@
                 </strong>
 
                 <span>
-                    THREATS
+                    THREATS DETECTED
                 </span>
 
             </div>
@@ -1344,6 +1525,26 @@
     <!-- HISTORY CONTROLS -->
 
     <div class="history-controls">
+
+        <div class="history-source-switch" role="group" aria-label="History source">
+            <button id="historySourceSaved" class="history-source-button is-active" type="button" data-history-source="saved" aria-pressed="true">Saved scans</button>
+            <button id="historySourceBrowser" class="history-source-button" type="button" data-history-source="browser" aria-pressed="false">This browser</button>
+        </div>
+
+        <label class="history-search-wrap">
+            <span class="visually-hidden">Search scan history</span>
+            <input id="historySearch" type="search" placeholder="Search domains or links" autocomplete="off">
+        </label>
+
+        <label class="history-filter-wrap">
+            <span class="visually-hidden">Filter by verdict</span>
+            <select id="historyVerdictFilter">
+                <option value="all">All verdicts</option>
+                <option value="safe">Safe</option>
+                <option value="caution">Caution</option>
+                <option value="danger">Danger</option>
+            </select>
+        </label>
 
         <button
                 type="button"
@@ -1358,20 +1559,51 @@
         <button
                 type="button"
                 class="secondary-button"
-                onclick="clearHistory()">
+                id="clearBrowserHistory"
+                onclick="clearHistory()"
+                hidden>
 
-            Clear History
+            Clear Browser History
 
         </button>
 
+        <button type="button" class="secondary-button" onclick="downloadHistoryCSV()">
+            Export CSV
+        </button>
+
     </div>
+
+
+    <p id="historyFilterStatus" class="history-filter-status" aria-live="polite">
+        Browser-local scan history
+    </p>
+
+    <section class="history-compare" aria-labelledby="historyCompareTitle">
+        <div class="history-compare-heading">
+            <span class="section-label">SCAN TIMELINE</span>
+            <h3 id="historyCompareTitle">Compare two scans</h3>
+            <p>See how the returned verdict, score, and reasons changed between analyses.</p>
+        </div>
+        <div class="history-compare-controls">
+            <label for="compareScanOlder">Earlier scan
+                <select id="compareScanOlder" aria-label="Earlier scan"></select>
+            </label>
+            <label for="compareScanNewer">Later scan
+                <select id="compareScanNewer" aria-label="Later scan"></select>
+            </label>
+            <button id="compareScansButton" class="secondary-button" type="button">Compare scans</button>
+        </div>
+        <div id="historyComparison" class="history-comparison-result" aria-live="polite" hidden></div>
+    </section>
 
 
     <!-- HISTORY LIST -->
 
     <div
             id="historyList"
-            class="history-list">
+            class="history-list"
+            aria-live="polite"
+            aria-busy="false">
 
         <div class="history-empty">
 
@@ -1687,12 +1919,12 @@
             </span>
 
             <h3>
-                Explainable AI
+                Explainable Results
             </h3>
 
             <p>
-                Turn technical indicators into a simple
-                explanation that users can understand.
+                Show the checks and reasons returned by the
+                analysis in language people can understand.
             </p>
 
         </div>

@@ -336,44 +336,9 @@ function initializeQRImageInput() {
     document.querySelectorAll("#qrImageInput, #qrCameraInput").forEach(input => input.addEventListener("change", async () => {
         const file = input.files?.[0];
         if (!file) return;
-
-        if (typeof Html5Qrcode === "undefined") {
-            updateCameraStatus("The QR reader is unavailable. Check your connection and reload the page.");
-            input.value = "";
-            return;
-        }
-
-        const reader = document.getElementById("qr-reader");
-        if (!reader) {
-            updateCameraStatus("QR image area is unavailable. Reload the page and try again.");
-            input.value = "";
-            return;
-        }
-        updateCameraStatus(`Reading ${file.name}…`);
-        input.disabled = true;
-
-        let decoder = null;
-        let payload = "";
-        try {
-            decoder = new Html5Qrcode(reader.id);
-            payload = await decoder.scanFile(file, true);
-        } catch (error) {
-            updateCameraStatus(error?.message || "No readable QR code was found in that image. Try a sharper, well-lit image.");
-            showToast("Could not read a QR code from that image.");
-            return;
-        } finally {
-            if (decoder) {
-                try { await decoder.clear(); } catch (cleanupError) {
-                    console.warn("QR image decoder cleanup:", cleanupError);
-                }
-            }
-            input.disabled = false;
-            input.value = "";
-        }
-
-        showURL();
-        showQRPreview(payload, input.id === "qrCameraInput" ? "Camera photo" : "QR image");
+        await decodeQRImageFile(file, input.id === "qrCameraInput" ? "Camera photo" : "QR image");
     }));
+    document.getElementById("pasteQRImageButton")?.addEventListener("click", pasteQRImageFromClipboard);
     document.getElementById("qrAnalyzeButton")?.addEventListener("click", async () => {
         const payload = pendingQrPayload;
         if (!payload) return;
@@ -399,6 +364,50 @@ function initializeQRImageInput() {
             showToast("Could not access the clipboard.");
         }
     });
+}
+
+async function decodeQRImageFile(file, source) {
+    if (typeof Html5Qrcode === "undefined") {
+        updateCameraStatus("The QR reader is unavailable. Check your connection and reload the page.");
+        return;
+    }
+    const reader = document.getElementById("qr-reader");
+    if (!reader) return;
+    updateCameraStatus(`Reading ${file.name || "clipboard image"}…`);
+    let decoder = null;
+    try {
+        decoder = new Html5Qrcode(reader.id);
+        const payload = await decoder.scanFile(file, true);
+        showURL();
+        showQRPreview(payload, source);
+    } catch (error) {
+        updateCameraStatus("No readable QR code was found in that image. Try a sharper, well-lit image.");
+        showToast("Could not read a QR code from that image.");
+    } finally {
+        if (decoder) {
+            try { await decoder.clear(); } catch (cleanupError) { console.warn("QR image decoder cleanup:", cleanupError); }
+        }
+    }
+}
+
+async function pasteQRImageFromClipboard() {
+    if (!navigator.clipboard?.read) {
+        showToast("Image paste is not supported here. Choose an image file instead.");
+        return;
+    }
+    try {
+        const items = await navigator.clipboard.read();
+        for (const item of items) {
+            const imageType = item.types.find(type => type.startsWith("image/"));
+            if (!imageType) continue;
+            const blob = await item.getType(imageType);
+            await decodeQRImageFile(new File([blob], "clipboard-qr-image", { type: imageType }), "Pasted image");
+            return;
+        }
+        showToast("No image was found in the clipboard.");
+    } catch (error) {
+        showToast("Clipboard access was blocked. Choose a QR image instead.");
+    }
 }
 
 function showQRPreview(payload, source = "QR code") {

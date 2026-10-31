@@ -3375,6 +3375,7 @@ async function startQRScanner() {
         const torchButton = document.getElementById("qrTorchButton");
         const torchSupported = qrScanner.getRunningTrackCameraCapabilities?.().torchFeature?.().isSupported?.();
         if (torchButton) torchButton.classList.toggle("hidden", !torchSupported);
+        initializeQRZoomControl();
 
         document.querySelector(".analyzer-card")?.classList.add("is-qr-live");
         setAppStatus("qr");
@@ -3477,6 +3478,36 @@ async function toggleQRTorch() {
         }
     } catch (error) {
         showToast("Could not change the flashlight. Your camera may not support it.");
+    }
+}
+
+function initializeQRZoomControl() {
+    const control = document.getElementById("qrZoomControl");
+    const input = document.getElementById("qrZoomInput");
+    const value = document.getElementById("qrZoomValue");
+    if (!qrScanner?.isScanning || !control || !input) return;
+    try {
+        const feature = qrScanner.getRunningTrackCameraCapabilities?.().zoomFeature?.();
+        if (!feature?.isSupported?.()) {
+            control.classList.add("hidden");
+            return;
+        }
+        const min = feature.min();
+        const max = feature.max();
+        const step = feature.step() || 0.1;
+        input.min = String(min);
+        input.max = String(max);
+        input.step = String(step);
+        input.value = String(min);
+        control.classList.remove("hidden");
+        if (value) value.textContent = `${Number(min).toFixed(1)}×`;
+        input.oninput = async () => {
+            if (value) value.textContent = `${Number(input.value).toFixed(1)}×`;
+            try { await qrScanner.applyVideoConstraints({ advanced: [{ zoom: Number(input.value) }] }); }
+            catch (error) { showToast("Camera zoom could not be changed."); }
+        };
+    } catch (error) {
+        control.classList.add("hidden");
     }
 }
 

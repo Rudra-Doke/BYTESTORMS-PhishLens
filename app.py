@@ -4110,6 +4110,15 @@ def home():
     )
 
 
+@app.route("/service-worker.js")
+def service_worker():
+    """Serve the PWA worker at the site root so it can control the app shell."""
+    response = app.send_static_file("service-worker.js")
+    response.headers["Service-Worker-Allowed"] = "/"
+    response.headers["Cache-Control"] = "no-cache"
+    return response
+
+
 @app.route(
     "/analyze",
     methods=["POST"]

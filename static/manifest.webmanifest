@@ -1,0 +1,19 @@
+{
+  "id": "/",
+  "name": "PhishLens — Threat Intelligence",
+  "short_name": "PhishLens",
+  "description": "Inspect suspicious links, QR destinations, and payment requests.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0b0c10",
+  "theme_color": "#0b0c10",
+  "icons": [
+    {
+      "src": "/static/phishlens-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

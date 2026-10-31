@@ -75,6 +75,7 @@ function initializePhishLens() {
     initializeDisplayControls();
     initializeAppInstall();
     initializeConnectionStatus();
+    initializeAppUpdates();
 
     if (input) {
 
@@ -111,6 +112,15 @@ function initializeConnectionStatus() {
     window.addEventListener("online", update);
     window.addEventListener("offline", update);
     update();
+}
+
+function initializeAppUpdates() {
+    const banner = document.getElementById("appUpdateBanner");
+    if (!banner || !("serviceWorker" in navigator)) return;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+        banner.classList.remove("hidden");
+    });
+    document.getElementById("refreshAppButton")?.addEventListener("click", () => window.location.reload());
 }
 
 function initializeAppInstall() {

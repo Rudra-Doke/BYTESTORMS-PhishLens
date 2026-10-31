@@ -5474,6 +5474,8 @@ body::before { animation: atmosphere-breathe 18s ease-in-out infinite alternate;
 .install-app-button { border: 1px solid rgba(214,183,106,.55) !important; border-radius: 999px; padding: 9px 14px; color: var(--gold, #d6b76a) !important; }
 .connection-banner { display: flex; align-items: center; gap: 10px; position: sticky; top: var(--nav-height, 80px); z-index: 20; padding: 12px max(18px, calc((100vw - 1180px) / 2)); background: #382b16; border-bottom: 1px solid rgba(214,183,106,.5); color: #f2dfb3; font-size: 14px; line-height: 1.45; }
 .connection-banner > span:first-child { color: #e4ae4e; font-size: 11px; flex: 0 0 auto; }
+.app-update-banner { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 12px; padding: 10px 16px; background: #1c3026; border-bottom: 1px solid rgba(95,190,132,.4); color: #d7f4e1; font-size: 14px; }
+.app-update-banner button { padding: 7px 12px; border: 1px solid rgba(95,190,132,.6); border-radius: 8px; background: transparent; color: inherit; cursor: pointer; }
 body[data-theme="pearl"] .connection-banner { background: #fff2d7; color: #493819; }
 .mobile-action-bar { display: none; }
 @media (max-width: 720px) {

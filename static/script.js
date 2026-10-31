@@ -130,7 +130,13 @@ function initializeConnectionStatus() {
 function initializeAppUpdates() {
     const banner = document.getElementById("appUpdateBanner");
     if (!banner || !("serviceWorker" in navigator)) return;
+    const controlSeenKey = "phishlens_service_worker_control_seen";
+    if (navigator.serviceWorker.controller) sessionStorage.setItem(controlSeenKey, "yes");
     navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (sessionStorage.getItem(controlSeenKey) !== "yes") {
+            sessionStorage.setItem(controlSeenKey, "yes");
+            return;
+        }
         banner.classList.remove("hidden");
     });
     document.getElementById("refreshAppButton")?.addEventListener("click", () => window.location.reload());
